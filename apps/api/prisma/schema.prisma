@@ -1,0 +1,323 @@
+// File: apps/api/prisma/schema.prisma
+
+// 1. Konfigurasi Generator Klien Prisma
+// Ini memberi tahu Prisma untuk menghasilkan Klien TypeScript
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 2. Konfigurasi Sumber Data
+// Ini menghubungkan Prisma ke database PostgreSQL Anda melalui variabel .env
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// BLOK 1: MANAJEMEN PENGGUNA & PERAN
+// ===========================================
+
+model Role {
+  id        BigInt   @id @default(autoincrement())
+  roleName  String   @unique @map("role_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Satu Role dimiliki banyak User
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id        BigInt   @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  roleId    BigInt   @map("role_id")
+  role      Role     @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi 1-to-1: User ini BISA jadi Student, Lecturer, atau Guardian
+  student   Student?
+  lecturer  Lecturer?
+  guardian  Guardian?
+
+  @@map("users")
+}
+
+model Student {
+  id             BigInt   @id @default(autoincrement())
+  userId         BigInt   @unique @map("user_id") // Relasi 1-to-1
+  user           User     @relation(fields: [userId], references: [id])
+  studyProgramId BigInt   @map("study_program_id")
+  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
+  nim            String   @unique
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Student ini ada di...
+  guardians   GuardianStudent[] // ...daftar wali
+  krsHeaders  KrsHeader[]       // ...daftar KRS
+  classStudents ClassStudent[]    // ...daftar kelas yang diikuti
+  submissions AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
+
+  @@map("students")
+}
+
+model Lecturer {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @unique @map("user_id") // Relasi 1-to-1
+  user      User     @relation(fields: [userId], references: [id])
+  nidn      String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Dosen ini mengajar...
+  classes Class[]
+
+  @@map("lecturers")
+}
+
+model Guardian {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @unique @map("user_id") // Relasi 1-to-1
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Wali ini mewali...
+  students GuardianStudent[]
+
+  @@map("guardians")
+}
+
+// Tabel Pivot (Many-to-Many) antara Guardian dan Student
+model GuardianStudent {
+  id         BigInt   @id @default(autoincrement())
+  guardianId BigInt   @map("guardian_id")
+  guardian   Guardian @relation(fields: [guardianId], references: [id])
+  studentId  BigInt   @map("student_id")
+  student    Student  @relation(fields: [studentId], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("guardian_student")
+}
+
+// ===========================================
+// BLOK 2: STRUKTUR AKADEMIK & ADMINISTRASI
+// ===========================================
+
+model Major {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Satu Jurusan punya banyak Prodi
+  studyPrograms StudyProgram[]
+
+  @@map("majors")
+}
+
+model StudyProgram {
+  id        BigInt   @id @default(autoincrement())
+  majorId   BigInt   @map("major_id")
+  major     Major    @relation(fields: [majorId], references: [id])
+  name      String
+  level     String // "S1", "D3", dll.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Satu Prodi punya banyak...
+  students    Student[]
+  curriculums Curriculum[]
+
+  @@map("study_programs")
+}
+
+model Curriculum {
+  id             BigInt   @id @default(autoincrement())
+  studyProgramId BigInt   @map("study_program_id")
+  studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
+  name           String // "Kurikulum 2020", "Kurikulum Merdeka"
+  year           Int
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Satu Kurikulum punya banyak Mata Kuliah
+  courses Course[]
+
+  @@map("curriculums")
+}
+
+model Course {
+  id           BigInt     @id @default(autoincrement())
+  curriculumId BigInt     @map("curriculum_id")
+  curriculum   Curriculum @relation(fields: [curriculumId], references: [id])
+  code         String     @unique // "IF101"
+  name         String     // "Dasar Pemrograman"
+  credits      Int        // SKS
+  semester     Int
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // Relasi: Mata kuliah ini...
+  prerequisites   Prerequisite[] @relation("coursePrerequisites") // ...memiliki prasyarat
+  prerequisiteFor Prerequisite[] @relation("prerequisiteForCourse") // ...menjadi prasyarat
+  krsDetails      KrsDetail[]    // ...ada di detail KRS
+  classes         Class[]        // ...memiliki banyak kelas
+
+  @@map("courses")
+}
+
+// Tabel Prasyarat (Many-to-Many ke dirinya sendiri)
+model Prerequisite {
+  id                   BigInt   @id @default(autoincrement())
+  courseId             BigInt   @map("course_id") // Mata kuliah yang punya prasyarat
+  course               Course   @relation("coursePrerequisites", fields: [courseId], references: [id])
+  prerequisiteCourseId BigInt   @map("prerequisite_course_id") // Mata kuliah yang JADI prasyarat
+  prerequisiteCourse   Course   @relation("prerequisiteForCourse", fields: [prerequisiteCourseId], references: [id])
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("prerequisites")
+}
+
+model AcademicYear {
+  id        BigInt   @id @default(autoincrement())
+  year      String // "2024/2025"
+  semester  String // "GANJIL", "GENAP"
+  startDate DateTime @db.Date @map("start_date")
+  endDate   DateTime @db.Date @map("end_date")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Tahun Ajaran ini punya...
+  krsHeaders KrsHeader[]
+  classes    Class[]
+
+  @@map("academic_years")
+}
+
+// Master KRS (Header)
+model KrsHeader {
+  id             BigInt   @id @default(autoincrement())
+  studentId      BigInt   @map("student_id")
+  student        Student  @relation(fields: [studentId], references: [id])
+  academicYearId BigInt   @map("academic_year_id")
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  semester       Int // Semester ke- (1, 2, 3...)
+  status         String // "DRAFT", "APPROVED", "REJECTED"
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relasi: KRS ini punya banyak...
+  krsDetails KrsDetail[]
+
+  @@map("krs_headers")
+}
+
+// Detail Mata Kuliah yang diambil di KRS
+model KrsDetail {
+  id          BigInt    @id @default(autoincrement())
+  krsHeaderId BigInt    @map("krs_header_id")
+  krsHeader   KrsHeader @relation(fields: [krsHeaderId], references: [id])
+  courseId    BigInt    @map("course_id")
+  course      Course    @relation(fields: [courseId], references: [id])
+  grade       String? // Nilai akhir (A, B, C...) bisa null
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("krs_details")
+}
+
+// ===========================================
+// BLOK 3: SESI PERKULIAHAN (PELAKSANAAN)
+// ===========================================
+
+// Ini adalah "pelaksanaan" dari sebuah Course di semester tertentu
+model Class {
+  id             BigInt   @id @default(autoincrement())
+  courseId       BigInt   @map("course_id")
+  course         Course   @relation(fields: [courseId], references: [id])
+  lecturerId     BigInt   @map("lecturer_id")
+  lecturer       Lecturer @relation(fields: [lecturerId], references: [id])
+  academicYearId BigInt   @map("academic_year_id")
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  name           String // "Kelas A", "Kelas B"
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Kelas ini punya...
+  students    ClassStudent[] // ...daftar mahasiswa
+  materials   Material[]     // ...daftar materi
+  assignments Assignment[]   // ...daftar tugas
+
+  @@map("classes")
+}
+
+// Tabel Pivot (Many-to-Many) antara Class dan Student
+// Ini adalah "Roster" atau "Daftar Peserta Kelas"
+model ClassStudent {
+  id        BigInt   @id @default(autoincrement())
+  classId   BigInt   @map("class_id")
+  class     Class    @relation(fields: [classId], references: [id])
+  studentId BigInt   @map("student_id")
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([classId, studentId]) // Mahasiswa hanya bisa join 1 kelas 1x
+  @@map("class_student")
+}
+
+model Material {
+  id        BigInt   @id @default(autoincrement())
+  classId   BigInt   @map("class_id")
+  class     Class    @relation(fields: [classId], references: [id])
+  title     String
+  fileUrl   String?  @map("file_url")
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("materials")
+}
+
+model Assignment {
+  id          BigInt   @id @default(autoincrement())
+  classId     BigInt   @map("class_id")
+  class       Class    @relation(fields: [classId], references: [id])
+  title       String
+  description String   @db.Text
+  deadline    DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relasi: Tugas ini punya banyak...
+  submissions AssignmentSubmission[]
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           BigInt     @id @default(autoincrement())
+  assignmentId BigInt     @map("assignment_id")
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    BigInt     @map("student_id")
+  student      Student    @relation(fields: [studentId], references: [id])
+  fileUrl      String     @map("file_url")
+  submittedAt  DateTime   @default(now()) @map("submitted_at")
+  grade        Float? // Nilai (misal: 85.5)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@unique([assignmentId, studentId]) // Mahasiswa hanya bisa submit 1x per tugas
+  @@map("assignment_submissions")
+}
