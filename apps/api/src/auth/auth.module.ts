@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { UsersModule } from '../users/users.module'; // <-- 1. Impor UsersModule
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 
 @Module({
@@ -21,7 +22,7 @@ import { LocalStrategy } from './local.strategy';
       signOptions: { expiresIn: '1d' }, // Token berlaku selama 1 hari
     }),
   ],
-  providers: [AuthService, LocalStrategy, UsersService], // Nanti kita akan tambah 'Strategy' di sini
+  providers: [AuthService, LocalStrategy, JwtStrategy, UsersService], // Nanti kita akan tambah 'Strategy' di sini
   controllers: [AuthController],
 })
 export class AuthModule {}

@@ -8,6 +8,18 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  private userSelect = {
+    id: true,
+    email: true,
+    createdAt: true,
+    updatedAt: true,
+    role: {
+      select: {
+        roleName: true,
+      },
+    },
+  };
+
   async create(createUserDto: CreateUserDto) {
     try {
       const user = {
@@ -113,5 +125,44 @@ export class UsersService {
       return null;
     }
     return user; // Kembalikan user LENGKAP (termasuk password)
+  }
+  async findForAuth(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: {
+        role: true, // Ambil objek role lengkap
+        student: true, // Ambil profil student (jika ada)
+        lecturer: true, // Ambil profil lecturer (jika ada)
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+    return user; // Kembalikan LENGKAP (termasuk password)
+  }
+
+  /**
+   * Mengambil profil lengkap user berdasarkan ID untuk JWT Strategy.
+   * TIDAK termasuk password.
+   */
+  async findProfileById(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        role: true,
+        student: true,
+        lecturer: true,
+      },
+    });
+    if (!user) {
+      return {
+        status: 404,
+        message: 'User not found',
+      };
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
   }
 }

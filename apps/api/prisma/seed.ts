@@ -1,7 +1,7 @@
 // 📁 apps/api/prisma/seed.ts
 
 import { PrismaClient } from '@prisma/client';
-
+import { Role } from 'shared-types';
 // Inisialisasi Prisma Client
 const prisma = new PrismaClient();
 
@@ -17,7 +17,8 @@ async function main() {
     where: { roleName: 'ADMIN' },
     update: {},
     create: {
-      roleName: 'ADMIN',
+      // Unsafe assignment of an error typed value.
+      roleName: Role.ADMIN,
     },
   });
 

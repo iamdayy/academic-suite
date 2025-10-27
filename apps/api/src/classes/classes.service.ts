@@ -1,0 +1,60 @@
+// 📁 apps/api/src/classes/classes.service.ts
+
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateClassDto } from './dto/create-class.dto';
+import { UpdateClassDto } from './dto/update-class.dto';
+
+@Injectable()
+export class ClassesService {
+  // 1. Suntikkan (Inject) PrismaService
+  constructor(private prisma: PrismaService) {}
+
+  // 2. Definisikan data yang ingin kita sertakan
+  private classInclude = {
+    course: true, // Data mata kuliah
+    lecturer: true, // Data profil dosen (NIDN, Nama)
+    academicYear: true, // Data tahun ajaran
+  };
+
+  create(createClassDto: CreateClassDto) {
+    return this.prisma.class.create({
+      data: createClassDto,
+      include: this.classInclude,
+    });
+  }
+
+  findAll() {
+    return this.prisma.class.findMany({
+      include: this.classInclude,
+    });
+  }
+
+  async findOne(id: number) {
+    const classInstance = await this.prisma.class.findUnique({
+      where: { id },
+      include: this.classInclude,
+    });
+
+    if (!classInstance) {
+      throw new NotFoundException(`Class with ID ${id} not found`);
+    }
+    return classInstance;
+  }
+
+  update(id: number, updateClassDto: UpdateClassDto) {
+    return this.prisma.class.update({
+      where: { id },
+      data: updateClassDto,
+      include: this.classInclude,
+    });
+  }
+
+  async remove(id: number) {
+    // Pastikan ada sebelum dihapus
+    await this.findOne(id);
+    return this.prisma.class.delete({
+      where: { id },
+    });
+  }
+}

@@ -19,7 +19,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard) // 2. Gunakan Guard di sini
   @Post('login')
   login(@Request() req: { user: User }) {
-    console.log(req.user);
     return this.authService.login(req.user); // req.user sekarang memiliki tipe User
   }
 }

@@ -1,0 +1,14 @@
+{
+  // Ambil konfigurasi dasar dari package tsconfig
+  // "extends": "@tsconfig/base", 
+  "compilerOptions": {
+    // Tentukan folder output (hasil build)
+    "outDir": "dist",
+    // Hasilkan file .d.ts agar type-safety tetap terjaga
+    "declaration": true 
+  },
+  // Tentukan file apa saja yang akan di-compile
+  "include": ["src"], 
+  // Abaikan folder-folder ini
+  "exclude": ["node_modules", "dist"] 
+}
