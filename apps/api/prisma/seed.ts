@@ -1,44 +1,52 @@
 // 📁 apps/api/prisma/seed.ts
 
 import { PrismaClient } from '@prisma/client';
-import { Role } from 'shared-types';
+import * as bcrypt from 'bcrypt';
+
 // Inisialisasi Prisma Client
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Start seeding ...');
 
-  // 1. Buat Role (Peran)
-  // upsert = "update or insert".
-  // Ini akan membuat role jika belum ada, atau meng-update-nya jika sudah ada.
-  // Ini membuat script seed aman untuk dijalankan berkali-kali.
-
+  // --- 1. SEED ROLES ---
+  // upsert = "update or insert". Aman dijalankan berkali-kali.
   const roleAdmin = await prisma.role.upsert({
     where: { roleName: 'ADMIN' },
     update: {},
-    create: {
-      // Unsafe assignment of an error typed value.
-      roleName: Role.ADMIN,
-    },
+    create: { roleName: 'ADMIN' },
   });
 
   const roleLecturer = await prisma.role.upsert({
     where: { roleName: 'LECTURER' },
     update: {},
-    create: {
-      roleName: 'LECTURER',
-    },
+    create: { roleName: 'LECTURER' },
   });
 
   const roleStudent = await prisma.role.upsert({
     where: { roleName: 'STUDENT' },
     update: {},
+    create: { roleName: 'STUDENT' },
+  });
+
+  console.log('Roles seeded.');
+
+  // --- 2. SEED ADMIN USER ---
+  const salt = await bcrypt.genSalt();
+  const hashedPassword = await bcrypt.hash('admin123', salt); // Ganti password default ini
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {}, // Jangan update jika sudah ada
     create: {
-      roleName: 'STUDENT',
+      email: 'admin@example.com',
+      password: hashedPassword,
+      roleId: roleAdmin.id, // Hubungkan ke role ADMIN
     },
   });
 
-  console.log({ roleAdmin, roleLecturer, roleStudent });
+  console.log('Admin user seeded.');
+  console.log({ roleAdmin, roleLecturer, roleStudent, adminUser });
   console.log('Seeding finished.');
 }
 
@@ -48,7 +56,8 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  .finally(async () => {
     // Tutup koneksi database
-    void prisma.$disconnect();
+    await prisma.$disconnect();
   });

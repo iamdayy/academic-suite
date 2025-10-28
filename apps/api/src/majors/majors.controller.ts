@@ -36,7 +36,6 @@ export class MajorsController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    // <-- 8. Terapkan ParseIntPipe
     return this.majorsService.findOne(id);
   }
 

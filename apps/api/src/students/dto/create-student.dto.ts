@@ -12,9 +12,5 @@ export class CreateStudentDto {
 
   @IsNumber()
   @IsNotEmpty()
-  userId: number; // 🔗 Foreign key ke tabel User
-
-  @IsNumber()
-  @IsNotEmpty()
   studyProgramId: number; // 🔗 Foreign key ke tabel StudyProgram
 }

@@ -1,5 +1,6 @@
 // 📁 apps/api/src/academic-years/dto/create-academic-year.dto.ts
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDate, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateAcademicYearDto {
   @IsString()
@@ -10,11 +11,13 @@ export class CreateAcademicYearDto {
   @IsNotEmpty()
   semester: string; // "GANJIL" atau "GENAP"
 
-  @IsDateString() // Validasi bahwa ini adalah string tanggal ISO (YYYY-MM-DD)
+  @IsDate() // Validasi bahwa ini adalah string tanggal ISO (YYYY-MM-DD)
+  @Type(() => Date) // Konversi ke tipe Date
   @IsNotEmpty()
   startDate: string;
 
-  @IsDateString()
+  @IsDate()
+  @Type(() => Date)
   @IsNotEmpty()
   endDate: string;
 }

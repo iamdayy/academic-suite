@@ -1,16 +1,24 @@
 // 📁 apps/api/src/auth/auth.service.ts
 
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'shared-types';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { RegisterStudentDto } from './dto/register-student.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private prisma: PrismaService,
   ) {}
 
   /**
@@ -49,5 +57,72 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  /** */
+  async registerStudent(registerStudentDto: RegisterStudentDto) {
+    const { nim, email, password } = registerStudentDto;
+
+    // 1. Cari profil Student berdasarkan NIM
+    const student = await this.prisma.student.findUnique({
+      where: { nim },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student profile not found for this NIM');
+    }
+
+    // 2. Cek apakah akun sudah diaktivasi (sudah punya userId)
+    if (student.userId) {
+      throw new ConflictException(
+        'This student account is already registered/activated',
+      );
+    }
+
+    // 3. Cek apakah email sudah dipakai
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already in use');
+    }
+
+    // 4. Dapatkan ID untuk role "STUDENT"
+    const studentRole = await this.prisma.role.findUnique({
+      where: { roleName: Role.STUDENT },
+    });
+    if (!studentRole) {
+      throw new Error('STUDENT role not found. Please seed database.');
+    }
+
+    // 5. Hash password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 6. Gunakan Transaksi: Buat User BARU dan Update Student
+    // Ini memastikan kedua operasi berhasil atau keduanya gagal.
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // a. Buat User baru
+        const newUser = await tx.user.create({
+          data: {
+            email: email,
+            password: hashedPassword,
+            roleId: studentRole.id,
+          },
+        });
+
+        // b. Hubungkan User baru ke Student profile
+        await tx.student.update({
+          where: { id: student.id },
+          data: { userId: newUser.id }, // Link akunnya!
+        });
+      });
+
+      return { message: 'Registration successful. Please login.' };
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw new ConflictException('Registration failed. Please try again.');
+    }
   }
 }
