@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Role } from 'shared-types';
+import * as sharedTypes from 'shared-types';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/user.decorator'; // <-- 1. Impor decorator @GetUser
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -32,10 +32,10 @@ export class KrsHeadersController {
    */
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(Role.STUDENT) // Hanya STUDENT yang bisa membuat
+  @Roles(sharedTypes.Role.STUDENT) // Hanya STUDENT yang bisa membuat
   create(
     @Body() createKrsHeaderDto: CreateKrsHeaderDto,
-    @GetUser() user, // <-- 2. Ambil user yang login
+    @GetUser() user: sharedTypes.AuthenticatedUser, // <-- 2. Ambil user yang login
   ) {
     return this.krsHeadersService.create(createKrsHeaderDto, user);
   }
@@ -46,8 +46,8 @@ export class KrsHeadersController {
    */
   @Get('my')
   @UseGuards(RolesGuard)
-  @Roles(Role.STUDENT) // Hanya STUDENT
-  findMyHeaders(@GetUser() user) {
+  @Roles(sharedTypes.Role.STUDENT) // Hanya STUDENT
+  findMyHeaders(@GetUser() user: sharedTypes.AuthenticatedUser) {
     return this.krsHeadersService.findMyHeaders(user);
   }
 
@@ -57,7 +57,7 @@ export class KrsHeadersController {
    */
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN) // Hanya ADMIN
+  @Roles(sharedTypes.Role.ADMIN) // Hanya ADMIN
   findAll() {
     return this.krsHeadersService.findAll();
   }
@@ -68,7 +68,10 @@ export class KrsHeadersController {
    */
   @Get(':id')
   // Keamanan ditangani di dalam service (cek kepemilikan)
-  findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: sharedTypes.AuthenticatedUser,
+  ) {
     return this.krsHeadersService.findOne(id, user);
   }
 
@@ -78,7 +81,7 @@ export class KrsHeadersController {
    */
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN) // Hanya ADMIN
+  @Roles(sharedTypes.Role.ADMIN) // Hanya ADMIN
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateKrsHeaderDto: UpdateKrsHeaderDto,
@@ -92,7 +95,7 @@ export class KrsHeadersController {
    */
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN) // Hanya ADMIN
+  @Roles(sharedTypes.Role.ADMIN) // Hanya ADMIN
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.krsHeadersService.remove(id);
   }

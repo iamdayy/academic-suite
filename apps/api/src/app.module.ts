@@ -13,9 +13,10 @@ import { StudentsModule } from './students/students.module';
 import { AcademicYearsModule } from './academic-years/academic-years.module';
 import { ClassesModule } from './classes/classes.module';
 import { KrsHeadersModule } from './krs-headers/krs-headers.module';
+import { KrsDetailsModule } from './krs-details/krs-details.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, StudyProgramsModule, CurriculumsModule, MajorsModule, CoursesModule, LecturersModule, StudentsModule, AcademicYearsModule, ClassesModule, KrsHeadersModule],
+  imports: [PrismaModule, UsersModule, AuthModule, StudyProgramsModule, CurriculumsModule, MajorsModule, CoursesModule, LecturersModule, StudentsModule, AcademicYearsModule, ClassesModule, KrsHeadersModule, KrsDetailsModule],
   controllers: [AppController],
   providers: [AppService],
 })

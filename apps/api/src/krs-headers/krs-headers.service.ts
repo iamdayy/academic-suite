@@ -5,17 +5,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Student, User } from '@prisma/client';
-import { Role } from 'shared-types';
+import { AuthenticatedUser, Role } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateKrsHeaderDto } from './dto/create-krs-header.dto';
 import { UpdateKrsHeaderDto } from './dto/update-krs-header.dto';
-
-// Tipe 'User' dari Prisma yang kita dapatkan dari req.user (setelah di-select)
-type AuthenticatedUser = Partial<User> & {
-  student?: Student;
-  role: { roleName: Role };
-};
 
 @Injectable()
 export class KrsHeadersService {
@@ -52,6 +45,10 @@ export class KrsHeadersService {
     }
     const studentId = user.student.id;
 
+    if (!studentId) {
+      throw new UnauthorizedException('Student ID not found');
+    }
+
     // 2. Buat KrsHeader
     return this.prisma.krsHeader.create({
       data: {
@@ -85,7 +82,7 @@ export class KrsHeadersService {
    * Menampilkan satu KRS spesifik.
    * Student hanya bisa melihat miliknya, Admin bisa melihat semua.
    */
-  async findOne(id: number, user: AuthenticatedUser) {
+  async findOne(id: number, user: Partial<AuthenticatedUser>) {
     const krsHeader = await this.prisma.krsHeader.findUnique({
       where: { id },
       include: this.krsHeaderInclude,
@@ -97,7 +94,7 @@ export class KrsHeadersService {
 
     // 4. Logika Keamanan:
     // Jika user adalah ADMIN, izinkan.
-    if (user.role.roleName === Role.ADMIN) {
+    if (user.role?.roleName === Role.ADMIN) {
       return krsHeader;
     }
 
