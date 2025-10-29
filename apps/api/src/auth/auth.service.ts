@@ -1,5 +1,3 @@
-// 📁 apps/api/src/auth/auth.service.ts
-
 import {
   ConflictException,
   Injectable,
@@ -8,7 +6,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { Role } from 'shared-types';
+import { Response } from 'express';
+import { AuthenticatedUser, Role } from 'shared-types';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { RegisterStudentDto } from './dto/register-student.dto';
@@ -30,7 +29,7 @@ export class AuthService {
   ): Promise<Omit<User, 'password'> | null> {
     // 1. Temukan user berdasarkan email.
     // Kita butuh 'findOneByEmail' di UsersService (akan kita buat)
-    const user = await this.usersService.findOneByEmail(email);
+    const user = await this.usersService.findForAuth(email);
 
     if (user && (await bcrypt.compare(pass, user.password))) {
       // 2. Jika user ditemukan & password cocok, kembalikan user
@@ -46,17 +45,22 @@ export class AuthService {
   /**
    * Dipanggil oleh AuthController untuk men-generate token
    */
-  login(user: User) {
-    // Payload adalah data yang ingin kita simpan di dalam token
-    const payload = {
-      email: user.email,
-      sub: user.id.toString(),
-      roleId: user.roleId,
-    };
+  login(user: AuthenticatedUser, response: Response) {
+    // <-- 2. Tambahkan parameter 'response'
+    console.log('id', user.id);
+    const payload = { email: user.email, sub: user.id, roleId: user.role.id };
+    const token = this.jwtService.sign(payload);
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    // 3. Simpan token di HTTP-Only cookie
+    response.cookie('access_token', token, {
+      httpOnly: true, // JavaScript frontend tidak bisa mengakses
+      secure: process.env.NODE_ENV === 'production', // Hanya HTTPS di produksi
+      sameSite: 'strict', // Proteksi CSRF
+      expires: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // Kadaluwarsa 1 hari
+    });
+
+    // 4. Kembalikan data user (tanpa token)
+    return { user };
   }
 
   /** */

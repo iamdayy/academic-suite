@@ -2,8 +2,17 @@
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
+import { Strategy } from 'passport-jwt';
 import { UsersService } from '../users/users.service';
+
+const cookieExtractor = (req: Request): string | null => {
+  let token: string | null = null;
+  if (req && req.cookies) {
+    token = req.cookies['access_token'] as string;
+  }
+  return token;
+};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -11,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(private usersService: UsersService) {
     super({
       // 1. Tentukan cara mengambil token: dari Header 'Authorization'
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: cookieExtractor,
       // 2. Jangan abaikan jika token kedaluwarsa (expired)
       ignoreExpiration: false,
       // 3. Secret key untuk memverifikasi token (HARUS SAMA dengan di AuthModule)
