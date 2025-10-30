@@ -1,6 +1,7 @@
 // 📁 apps/api/src/classes/classes.service.ts
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { AuthenticatedUser } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -25,8 +26,20 @@ export class ClassesService {
     });
   }
 
-  findAll() {
+  findAll(curriculumId?: number, academicYearId?: number) {
+    // <-- Tambah academicYearId
+    const whereClause: Prisma.ClassWhereInput = {}; // <-- Gunakan tipe Prisma
+
+    if (curriculumId) {
+      whereClause.course = { curriculumId: curriculumId };
+    }
+
+    if (academicYearId) {
+      whereClause.academicYearId = academicYearId; // <-- Tambah filter baru
+    }
+
     return this.prisma.class.findMany({
+      where: whereClause, // Gunakan klausa
       include: this.classInclude,
     });
   }

@@ -71,4 +71,25 @@ export class ClassEnrollmentService {
       },
     });
   }
+
+  /**
+   * [BARU] [UNTUK ADMIN]
+   * Menghapus mahasiswa dari kelas (un-enroll).
+   * 'id' di sini adalah ID dari baris di tabel ClassStudent.
+   */
+  async removeEnrollment(enrollmentId: number) {
+    const enrollment = await this.prisma.classStudent.findUnique({
+      where: { id: enrollmentId },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException(
+        `Enrollment record with ID ${enrollmentId} not found`,
+      );
+    }
+
+    return this.prisma.classStudent.delete({
+      where: { id: enrollmentId },
+    });
+  }
 }

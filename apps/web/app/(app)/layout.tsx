@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { BookCopy, CalendarDays, LayoutDashboard, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -63,7 +63,12 @@ export default function AppLayout({
     {
       name: 'Manajemen Akademik',
       href: '/admin/academics',
-      icon: LayoutDashboard,
+      icon: BookCopy,
+    },
+    {
+      name: "Manajemen T.A. & Kelas",
+      href: "/admin/academic-years",
+      icon: CalendarDays,
     }
   ];
   const lecturerRoutes: IRoute[] = [

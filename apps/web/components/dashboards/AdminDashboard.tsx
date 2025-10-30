@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookCopy, BookUser, School, Users } from 'lucide-react';
+import { BookCopy, BookUser, CalendarDays, Users } from 'lucide-react';
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -29,13 +29,13 @@ export default function AdminDashboard() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
+        <Link href="/admin/academic-years">
+          <CalendarDays className="mr-2 h-4 w-4" /> Manajemen T.A. & Kelas
+        </Link>
+      </Button>
+          <Button asChild size="lg" variant="outline">
             <Link href="/admin/users">
               <BookUser className="mr-2 h-4 w-4" /> Manajemen User
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/admin/classes">
-              <School className="mr-2 h-4 w-4" /> Manajemen Kelas
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">

@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -44,5 +45,16 @@ export class ClassEnrollmentController {
     @GetUser() user: sharedTypes.AuthenticatedUser,
   ) {
     return this.classEnrollmentService.getRosterByClass(classId, user);
+  }
+
+  /**
+   * [BARU] [UNTUK ADMIN]
+   * Hapus mahasiswa dari kelas (DELETE /class-enrollment/:id)
+   */
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(sharedTypes.Role.ADMIN)
+  removeEnrollment(@Param('id', ParseIntPipe) id: number) {
+    return this.classEnrollmentService.removeEnrollment(id);
   }
 }
