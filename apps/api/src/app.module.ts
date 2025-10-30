@@ -19,6 +19,8 @@ import { StudentsModule } from './students/students.module';
 import { StudyProgramsModule } from './study-programs/study-programs.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
+import { GuardiansModule } from './guardians/guardians.module';
+import { PrerequisitesModule } from './prerequisites/prerequisites.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { RolesModule } from './roles/roles.module';
     AssignmentSubmissionsModule,
     ClassEnrollmentsModule,
     RolesModule,
+    GuardiansModule,
+    PrerequisitesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

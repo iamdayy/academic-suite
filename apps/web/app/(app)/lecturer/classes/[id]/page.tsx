@@ -1,6 +1,8 @@
 // 📁 apps/web/app/lecturer/classes/[id]/page.tsx
 "use client";
 
+import { AssignmentFormDialog } from '@/components/AssignmentFormDialog';
+import { MaterialFormDialog } from '@/components/MaterialFormDialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/tabs";
 import api from '@/lib/api';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -44,35 +47,34 @@ export default function ManageClassPage() {
   const [roster, setRoster] = useState<EnrolledStudent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchClassData = async () => {
+    if (!classId) return;
+    try {
+      setIsLoading(true);
+      const [classRes, materialsRes, assignmentsRes, rosterRes] = await Promise.all([
+        api.get(`/classes/${classId}`),
+        api.get(`/materials/class/${classId}`),
+        api.get(`/assignments/class/${classId}`),
+        api.get(`/class-enrollment/roster/${classId}`),
+      ]);
+      setClassDetails(classRes.data);
+      setMaterials(materialsRes.data);
+      setAssignments(assignmentsRes.data);
+      setRoster(rosterRes.data);
+    } catch (error) {
+      console.error("Gagal mengambil data kelas:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
     if (!classId) return;
 
-    const fetchClassData = async () => {
-      try {
-        setIsLoading(true);
-        // Ambil semua data secara paralel
-        const [classRes, materialsRes, assignmentsRes, rosterRes] = await Promise.all([
-          api.get(`/classes/${classId}`),
-          api.get(`/materials/class/${classId}`),
-          api.get(`/assignments/class/${classId}`),
-          api.get(`/class-enrollment/roster/${classId}`),
-        ]);
-
-        setClassDetails(classRes.data);
-        setMaterials(materialsRes.data);
-        setAssignments(assignmentsRes.data);
-        setRoster(rosterRes.data);
-
-      } catch (error) {
-        console.error("Gagal mengambil data kelas:", error);
-        // Tambahkan toast error nanti
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchClassData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
+
 
   if (isLoading) {
     return (
@@ -103,7 +105,10 @@ export default function ManageClassPage() {
 
           {/* Tab Materi */}
           <TabsContent value="materials">
-            <Button className="mb-4">Tambah Materi Baru</Button>
+            <MaterialFormDialog 
+            classId={classDetails.id}
+            onSuccess={fetchClassData} // <-- Kirim fungsi refresh!
+          />
             <Table>
               <TableHeader>
                 <TableRow>
@@ -124,7 +129,10 @@ export default function ManageClassPage() {
 
           {/* Tab Tugas */}
           <TabsContent value="assignments">
-            <Button className="mb-4">Tambah Tugas Baru</Button>
+            <AssignmentFormDialog
+            classId={classDetails.id}
+            onSuccess={fetchClassData} // <-- Kirim fungsi refresh!
+          />
             <Table>
               <TableHeader>
                 <TableRow>
@@ -138,7 +146,9 @@ export default function ManageClassPage() {
                   <TableRow key={task.id.toString()}>
                     <TableCell>{task.title}</TableCell>
                     <TableCell>{new Date(task.deadline).toLocaleString('id-ID')}</TableCell>
-                    <TableCell><Button variant="outline" size="sm">Lihat Submission</Button></TableCell>
+                    <TableCell><Button variant="outline" size="sm">
+                      <Link href={`/lecturer/classes/${classId}/assignments/${task.id}`}>Lihat</Link>
+                      </Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

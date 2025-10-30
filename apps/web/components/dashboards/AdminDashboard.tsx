@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookCopy, BookUser, Building, GraduationCap, School } from 'lucide-react';
+import { BookCopy, BookUser, School, Users } from 'lucide-react';
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -23,26 +23,11 @@ export default function AdminDashboard() {
       <CardContent>
         {/* Ganti <p> dengan ini */}
         <div className="grid grid-cols-2 gap-4">
-          <Button asChild size="lg" variant="outline">
-            <Link href="/admin/majors">
-              <Building className="mr-2 h-4 w-4" /> Manajemen Jurusan
+          <Button asChild size="lg" variant="default" className="col-span-2">
+            <Link href="/admin/academics">
+              <BookCopy className="mr-2 h-4 w-4" /> Manajemen Akademik
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/admin/study-programs">
-              <GraduationCap className="mr-2 h-4 w-4" /> Manajemen Prodi
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/admin/curriculums">
-              <BookCopy className="mr-2 h-4 w-4" /> Manajemen Kurikulum
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-                <Link href="/admin/courses">
-                  <BookCopy className="mr-2 h-4 w-4" /> Manajemen MatKul
-                </Link>
-              </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/admin/users">
               <BookUser className="mr-2 h-4 w-4" /> Manajemen User
@@ -53,6 +38,11 @@ export default function AdminDashboard() {
               <School className="mr-2 h-4 w-4" /> Manajemen Kelas
             </Link>
           </Button>
+          <Button asChild size="lg" variant="outline">
+                <Link href="/admin/guardians">
+                  <Users className="mr-2 h-4 w-4" /> Manajemen Wali
+                </Link>
+              </Button>
         </div>
       </CardContent>
     </Card>

@@ -1,7 +1,12 @@
 // 📁 apps/api/src/courses/courses.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AddPrerequisiteDto } from './dto/add-prerequisite.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
@@ -29,16 +34,27 @@ export class CoursesService {
     });
   }
 
-  findAll() {
+  findAll(curriculumId?: number) {
+    // Tambahkan parameter opsional
+    const whereClause = curriculumId ? { curriculumId } : {};
+
     return this.prisma.course.findMany({
-      include: this.courseInclude, // 3. Gunakan include
+      where: whereClause, // Gunakan klausa
+      include: this.courseInclude,
     });
   }
 
   async findOne(id: number) {
     const course = await this.prisma.course.findUnique({
       where: { id },
-      include: this.courseInclude, // 4. Gunakan include
+      include: {
+        ...this.courseInclude, // 3. Gunakan include
+        prerequisites: {
+          include: {
+            prerequisiteCourse: true,
+          },
+        },
+      }, // 4. Gunakan include
     });
 
     if (!course) {
@@ -59,6 +75,39 @@ export class CoursesService {
     await this.findOne(id);
     return this.prisma.course.delete({
       where: { id },
+    });
+  }
+  /**
+   * [BARU] [UNTUK ADMIN]
+   * Menambahkan prasyarat ke sebuah mata kuliah.
+   */
+  async addPrerequisite(courseId: number, dto: AddPrerequisiteDto) {
+    const { prerequisiteCourseId } = dto;
+
+    // 1. Validasi kedua mata kuliah ada
+    const course = await this.findOne(courseId);
+    const prerequisiteCourse = await this.findOne(prerequisiteCourseId);
+
+    // 2. Cek apakah sudah ada
+    const existing = await this.prisma.prerequisite.findFirst({
+      where: {
+        courseId: course.id,
+        prerequisiteCourseId: prerequisiteCourse.id,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        'This prerequisite connection already exists',
+      );
+    }
+
+    // 3. Buat koneksi prasyarat
+    return this.prisma.prerequisite.create({
+      data: {
+        courseId: course.id,
+        prerequisiteCourseId: prerequisiteCourse.id,
+      },
     });
   }
 }

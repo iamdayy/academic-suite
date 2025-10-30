@@ -2,6 +2,7 @@ export enum Role {
   ADMIN = 'ADMIN',
   LECTURER = 'LECTURER',
   STUDENT = 'STUDENT',
+  GUARDIAN = 'GUARDIAN'
 }
 
 export interface AuthenticatedUser {
@@ -21,4 +22,10 @@ export interface AuthenticatedUser {
     nidn: string;
     name: string;
   } | null;
+  guardian?: {
+    id?: bigint;
+    name: string;
+    phone: string;
+  } | null;
+
 }

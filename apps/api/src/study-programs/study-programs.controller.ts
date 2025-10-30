@@ -8,7 +8,8 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post, // <-- 1. Impor
+  Post,
+  Query, // <-- 1. Impor
   UseGuards, // <-- 2. Impor
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
@@ -32,8 +33,10 @@ export class StudyProgramsController {
   }
 
   @Get()
-  findAll() {
-    return this.studyProgramsService.findAll();
+  findAll(@Query('majorId') majorId?: string) {
+    return this.studyProgramsService.findAll(
+      majorId ? Number(majorId) : undefined,
+    );
   }
 
   @Get(':id')

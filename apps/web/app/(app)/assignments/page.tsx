@@ -2,6 +2,7 @@
 "use client";
 
 import { SubmissionDialog } from '@/components/SubmissionDialog';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -14,6 +15,12 @@ import api from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+interface Submission {
+  id: bigint;
+  grade: number | null;
+  submittedAt: string;
+}
+
 // Definisikan tipe datanya
 interface Assignment {
   id: bigint;
@@ -22,24 +29,25 @@ interface Assignment {
   class: {
     name: string;
   };
+  submissions: Submission[];
 }
 
 export default function MyAssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchMyAssignments = async () => {
+    try {
+      // 1. Panggil endpoint baru kita
+      const response = await api.get('/assignments/my');
+      setAssignments(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil data tugas:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchMyAssignments = async () => {
-      try {
-        // 1. Panggil endpoint baru kita
-        const response = await api.get('/assignments/my');
-        setAssignments(response.data);
-      } catch (error) {
-        console.error("Gagal mengambil data tugas:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
     fetchMyAssignments();
   }, []);
@@ -54,6 +62,41 @@ export default function MyAssignmentsPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // 4. Buat helper untuk render tombol Aksi
+  const renderActionCell = (task: Assignment) => {
+    const submission = task.submissions[0]; // Ambil submission (jika ada)
+
+    if (submission) {
+      // KASUS 1: Sudah mengumpulkan
+      if (submission.grade !== null) {
+        // Sudah dinilai
+        return (
+          <Badge variant="default" className="text-lg">
+            Nilai: {submission.grade}
+          </Badge>
+        );
+      } else {
+        // Sudah kumpul, belum dinilai
+        return (
+          <Badge variant="secondary">
+            Terkumpul (Belum Dinilai)
+          </Badge>
+        );
+      }
+    } else {
+      // KASUS 2: Belum mengumpulkan
+      // TODO: Cek jika sudah lewat deadline
+      return (
+        <SubmissionDialog 
+          assignmentId={task.id} 
+          assignmentTitle={task.title}
+          // Kirim callback untuk me-refresh data setelah submit
+          onSuccess={fetchMyAssignments} 
+        />
+      );
+    }
   };
 
   return (
@@ -81,10 +124,7 @@ export default function MyAssignmentsPage() {
                   <TableCell>{task.title}</TableCell>
                   <TableCell>{formatDeadline(task.deadline)}</TableCell>
                   <TableCell>
-                    <SubmissionDialog 
-                          assignmentId={task.id} 
-                          assignmentTitle={task.title} 
-                        />
+                    {renderActionCell(task)}
                   </TableCell>
                 </TableRow>
               ))}

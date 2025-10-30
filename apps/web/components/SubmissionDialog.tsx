@@ -3,14 +3,14 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,9 +23,10 @@ import { toast } from "sonner"; // Impor hook toast
 interface SubmissionDialogProps {
   assignmentId: bigint;
   assignmentTitle: string;
+  onSuccess: () => void;
 }
 
-export function SubmissionDialog({ assignmentId, assignmentTitle }: SubmissionDialogProps) {
+export function SubmissionDialog({ assignmentId, assignmentTitle, onSuccess }: SubmissionDialogProps) {
   const [fileUrl, setFileUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,6 +46,7 @@ export function SubmissionDialog({ assignmentId, assignmentTitle }: SubmissionDi
 
       setIsOpen(false); // Tutup dialog jika berhasil
       setFileUrl(""); // Kosongkan form
+      onSuccess(); // Panggil callback untuk refresh data!
 
     } catch (error: any) {
       console.error("Gagal mengumpulkan:", error);

@@ -144,6 +144,11 @@ export class AssignmentsService {
       },
       include: {
         class: true, // Sertakan data kelas agar tahu ini tugas apa
+        submissions: {
+          where: {
+            studentId: studentId,
+          },
+        },
       },
       orderBy: {
         deadline: 'asc',

@@ -21,7 +21,6 @@ export default function AdminLayout({
               Kembali ke Dashboard
             </Link>
           </Button>
-          <h2 className="text-lg font-semibold ml-4">Admin Panel</h2>
         </div>
       </header>
 

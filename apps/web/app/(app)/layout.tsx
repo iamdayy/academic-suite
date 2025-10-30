@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
-import { Book, ClipboardList, LayoutDashboard, LogOut, School, UserCog } from 'lucide-react';
+import { LayoutDashboard, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Role } from 'shared-types';
 
 // Komponen untuk link di Sidebar
@@ -28,12 +29,18 @@ function SidebarLink({ href, children }: { href: string; children: React.ReactNo
   );
 }
 
+interface IRoute {
+  name: string;
+  href: string;
+  icon: any;
+}
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const { user, setUser } = useAuthStore();
+  const [ routes, setRoutes ] = useState<IRoute[]>([]);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -47,6 +54,44 @@ export default function AppLayout({
     }
   };
 
+  const adminRoutes: IRoute[] = [
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
+      name: 'Manajemen Akademik',
+      href: '/admin/academics',
+      icon: LayoutDashboard,
+    }
+  ];
+  const lecturerRoutes: IRoute[] = [
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+    }
+  ];
+  const studentRoutes: IRoute[] = [
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+    }
+  ];
+
+  useEffect(() => {
+    if (user?.role.roleName === Role.ADMIN) {
+      setRoutes(adminRoutes);
+    } else if (user?.role.roleName === Role.LECTURER) {
+      setRoutes(lecturerRoutes);
+    } else if (user?.role.roleName === Role.STUDENT) {
+      setRoutes(studentRoutes);
+    }
+  }, [user, setRoutes]);
+
+
   const getInitials = (email: string = '') => {
     return email[0]?.toUpperCase() || 'U';
   };
@@ -59,33 +104,13 @@ export default function AppLayout({
         <aside className="w-64 border-r bg-background p-4 flex flex-col">
           <h2 className="text-2xl font-bold mb-6">ACADEMIC SUITE</h2>
           <nav className="flex flex-col space-y-2 grow">
-            {/* Link Navigasi Dinamis */}
-            <SidebarLink href="/dashboard">
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-            </SidebarLink>
-
-            {user?.role.roleName === Role.STUDENT && (
-              <>
-                <SidebarLink href="/krs">
-                  <Book className="mr-2 h-4 w-4" /> KRS
+            {
+              routes.map((route, index) => (
+                <SidebarLink key={index} href={route.href}>
+                  <route.icon className="mr-2 h-4 w-4" /> {route.name}
                 </SidebarLink>
-                <SidebarLink href="/assignments">
-                  <ClipboardList className="mr-2 h-4 w-4" /> Tugas Saya
-                </SidebarLink>
-              </>
-            )}
-
-            {user?.role.roleName === Role.LECTURER && (
-              <SidebarLink href="/lecturer/classes">
-                <School className="mr-2 h-4 w-4" /> Kelas Saya
-              </SidebarLink>
-            )}
-
-            {user?.role.roleName === Role.ADMIN && (
-              <SidebarLink href="/admin/majors">
-                <UserCog className="mr-2 h-4 w-4" /> Panel Admin
-              </SidebarLink>
-            )}
+              ))
+            }
             
           </nav>
           <div className="text-xs text-muted-foreground">© 2025 Academic Suite</div>

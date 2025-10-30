@@ -2,6 +2,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'shared-types';
 
 // Inisialisasi Prisma Client
 const prisma = new PrismaClient();
@@ -29,6 +30,12 @@ async function main() {
     create: { roleName: 'STUDENT' },
   });
 
+  const roleGuardian = await prisma.role.upsert({
+    where: { roleName: Role.GUARDIAN }, // <-- TAMBAHKAN INI
+    update: {},
+    create: { roleName: Role.GUARDIAN },
+  });
+
   console.log('Roles seeded.');
 
   // --- 2. SEED ADMIN USER ---
@@ -46,7 +53,13 @@ async function main() {
   });
 
   console.log('Admin user seeded.');
-  console.log({ roleAdmin, roleLecturer, roleStudent, adminUser });
+  console.log({
+    roleAdmin,
+    roleLecturer,
+    roleStudent,
+    adminUser,
+    roleGuardian,
+  });
   console.log('Seeding finished.');
 }
 

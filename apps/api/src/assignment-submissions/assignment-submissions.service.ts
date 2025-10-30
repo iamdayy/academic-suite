@@ -9,6 +9,7 @@ import {
 import { AuthenticatedUser } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAssignmentSubmissionDto } from './dto/create-assignment-submission.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
 
 @Injectable()
 export class AssignmentSubmissionsService {
@@ -124,6 +125,35 @@ export class AssignmentSubmissionsService {
   }
 
   /**
+   * [BARU] [PRIVATE] Helper untuk memverifikasi apakah Dosen
+   * adalah pemilik (pengajar) dari kelas tempat tugas ini berada.
+   */
+  private async verifyLecturerOwnership(
+    assignmentId: number,
+    user: AuthenticatedUser,
+  ) {
+    if (!user.lecturer) {
+      throw new UnauthorizedException('User is not a lecturer');
+    }
+    const lecturerId = user.lecturer.id;
+
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: { class: true },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    if (assignment.class.lecturerId !== lecturerId) {
+      throw new UnauthorizedException('You do not own this assignment');
+    }
+
+    return assignment;
+  }
+
+  /**
    * [UNTUK LECTURER]
    * Melihat semua submission untuk satu tugas.
    */
@@ -132,6 +162,35 @@ export class AssignmentSubmissionsService {
       where: { assignmentId },
       include: {
         student: true, // Sertakan data mahasiswa yang mengumpulkan
+      },
+    });
+  }
+
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * Memberikan nilai pada sebuah submission.
+   */
+  async gradeSubmission(
+    submissionId: number,
+    gradeDto: GradeSubmissionDto,
+    user: AuthenticatedUser,
+  ) {
+    // 1. Dapatkan submission
+    const submission = await this.prisma.assignmentSubmission.findUnique({
+      where: { id: submissionId },
+    });
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // 2. Verifikasi bahwa Dosen ini berhak menilai (dia mengajar kelas ini)
+    await this.verifyLecturerOwnership(Number(submission.assignmentId), user);
+
+    // 3. Update nilai
+    return this.prisma.assignmentSubmission.update({
+      where: { id: submissionId },
+      data: {
+        grade: gradeDto.grade,
       },
     });
   }

@@ -8,14 +8,16 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post, // <-- 1. Impor
-  UseGuards, // <-- 2. Impor
+  Post,
+  Query, // <-- 1. Impor
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
 import { Role } from 'shared-types'; // <-- 6. Impor
 import { Roles } from '../auth/decorators/roles.decorator'; // <-- 5. Impor
 import { RolesGuard } from '../auth/guards/roles.guard'; // <-- 4. Impor
 import { CoursesService } from './courses.service';
+import { AddPrerequisiteDto } from './dto/add-prerequisite.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
@@ -32,14 +34,16 @@ export class CoursesController {
   }
 
   @Get()
-  findAll() {
-    return this.coursesService.findAll();
+  findAll(@Query('curriculumId') curriculumId?: number) {
+    return this.coursesService.findAll(
+      curriculumId ? Number(curriculumId) : undefined,
+    );
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     // <-- 8. Terapkan ParseIntPipe
-    return this.coursesService.findOne(id);
+    return this.coursesService.findOne(Number(id));
   }
 
   @Patch(':id')
@@ -54,5 +58,16 @@ export class CoursesController {
   remove(@Param('id', ParseIntPipe) id: number) {
     // <-- 8. Terapkan ParseIntPipe
     return this.coursesService.remove(id);
+  }
+  /**
+   * [BARU] [UNTUK ADMIN]
+   * Tambah prasyarat (POST /courses/:id/prerequisite)
+   */
+  @Post(':id/prerequisite')
+  addPrerequisite(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AddPrerequisiteDto,
+  ) {
+    return this.coursesService.addPrerequisite(id, dto);
   }
 }

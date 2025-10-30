@@ -7,6 +7,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { GetUser } from '../auth/decorators/user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { AssignmentSubmissionsService } from './assignment-submissions.service';
 import { CreateAssignmentSubmissionDto } from './dto/create-assignment-submission.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('assignment-submissions')
@@ -50,6 +52,25 @@ export class AssignmentSubmissionsController {
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
   ) {
     return this.assignmentSubmissionsService.findAllByAssignment(assignmentId);
+  }
+
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * Memberi nilai (PATCH /assignment-submissions/:id/grade)
+   */
+  @Patch(':id/grade')
+  @UseGuards(RolesGuard)
+  @Roles(sharedTypes.Role.LECTURER)
+  gradeSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() gradeDto: GradeSubmissionDto,
+    @GetUser() user: sharedTypes.AuthenticatedUser,
+  ) {
+    return this.assignmentSubmissionsService.gradeSubmission(
+      id,
+      gradeDto,
+      user,
+    );
   }
 
   /**

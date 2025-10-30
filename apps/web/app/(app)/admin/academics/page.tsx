@@ -3,27 +3,28 @@
 
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import api from '@/lib/api';
 import { Loader2, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { toast } from "sonner";
 
@@ -96,7 +97,7 @@ export default function MajorsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manajemen Jurusan (Majors)</h1>
+        <h1 className="text-3xl font-bold">Manajemen Akademik (Jurusan)</h1>
         
         {/* 8. Tombol & Dialog untuk Tambah Baru */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -165,9 +166,14 @@ export default function MajorsPage() {
                 <TableCell className="font-medium">{major.name}</TableCell>
                 <TableCell>{formatDate(major.createdAt)}</TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm">
-                    Edit
+                  {/* --- 3. UBAH TOMBOL INI --- */}
+                  <Button variant="outline" size="sm" asChild>
+                    {/* Arahkan ke level drill-down berikutnya */}
+                    <Link href={`/admin/academics/${major.id}`}>
+                      Kelola
+                    </Link>
                   </Button>
+                  {/* ------------------------- */}
                 </TableCell>
               </TableRow>
             ))}

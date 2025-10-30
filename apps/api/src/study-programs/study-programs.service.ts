@@ -17,9 +17,13 @@ export class StudyProgramsService {
     });
   }
 
-  findAll() {
+  findAll(majorId?: number) {
+    // Tambahkan parameter opsional
+    // Buat klausa 'where' dinamis
+    const whereClause = majorId ? { majorId: majorId } : {};
+
     return this.prisma.studyProgram.findMany({
-      // 2. Kita sertakan data 'major' agar informatif
+      where: whereClause, // Gunakan klausa
       include: {
         major: true,
       },

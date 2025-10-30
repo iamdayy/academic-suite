@@ -16,9 +16,12 @@ export class CurriculumsService {
     });
   }
 
-  findAll() {
+  findAll(studyProgramId?: number) {
+    // Tambahkan parameter opsional
+    const whereClause = studyProgramId ? { studyProgramId } : {};
+
     return this.prisma.curriculum.findMany({
-      // 2. Kita sertakan data 'studyProgram'
+      where: whereClause, // Gunakan klausa
       include: {
         studyProgram: true,
       },
