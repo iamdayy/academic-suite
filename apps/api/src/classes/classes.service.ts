@@ -1,6 +1,7 @@
 // 📁 apps/api/src/classes/classes.service.ts
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AuthenticatedUser } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
@@ -27,6 +28,31 @@ export class ClassesService {
   findAll() {
     return this.prisma.class.findMany({
       include: this.classInclude,
+    });
+  }
+
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * Menampilkan semua kelas yang diajar oleh dosen yang login.
+   */
+  async findMyClasses(user: AuthenticatedUser) {
+    // 1. Pastikan user adalah Dosen
+    if (!user.lecturer) {
+      throw new Error('User is not a lecturer');
+    }
+    const lecturerId = user.lecturer.id;
+
+    // 2. Cari semua kelas yang diajar oleh ID dosen ini
+    return this.prisma.class.findMany({
+      where: {
+        lecturerId: lecturerId,
+      },
+      include: this.classInclude, // Gunakan include yang sudah ada
+      orderBy: {
+        academicYear: {
+          startDate: 'desc',
+        },
+      },
     });
   }
 

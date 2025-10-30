@@ -18,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { StudentsModule } from './students/students.module';
 import { StudyProgramsModule } from './study-programs/study-programs.module';
 import { UsersModule } from './users/users.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module';
     AssignmentsModule,
     AssignmentSubmissionsModule,
     ClassEnrollmentsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

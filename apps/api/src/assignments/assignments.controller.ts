@@ -40,6 +40,19 @@ export class AssignmentsController {
   }
 
   /**
+   *
+   * [Untuk Mahasiswa]
+   * @param user
+   * @returns
+   */
+  @Get('my')
+  @UseGuards(RolesGuard)
+  @Roles(sharedTypes.Role.STUDENT)
+  findMyAssignments(@GetUser() user: sharedTypes.AuthenticatedUser) {
+    return this.assignmentsService.findMyAssignments(user);
+  }
+
+  /**
    * [UNTUK SEMUA ROLE LOGIN] (Termasuk Student)
    * Melihat semua tugas per kelas (GET /assignments/class/:classId)
    */

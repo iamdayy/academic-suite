@@ -8,6 +8,7 @@ import api from '../lib/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import navigate from 'next/navigation';
 import { AuthenticatedUser } from 'shared-types';
 
 export default function LoginPage() {
@@ -27,6 +28,7 @@ export default function LoginPage() {
         password: password,
       });
       setUser(response.data.user);
+      navigate.redirect('/dashboard');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       // ... (logika error Anda tidak berubah)
@@ -87,7 +89,6 @@ export default function LoginPage() {
           <div className="text-green-500 text-center">
             Login Berhasil! Selamat datang, {user.email}.
             <br />
-            (Cookie HttpOnly telah disimpan.)
           </div>
         )}
       </div>

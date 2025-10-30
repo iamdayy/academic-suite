@@ -12,7 +12,8 @@ import {
   UseGuards, // <-- 2. Impor
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
-import { Role } from 'shared-types'; // <-- 6. Impor
+import * as sharedTypes from 'shared-types'; // <-- 6. Impor
+import { GetUser } from 'src/auth/decorators/user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator'; // <-- 5. Impor
 import { RolesGuard } from '../auth/guards/roles.guard'; // <-- 4. Impor
 import { ClassesService } from './classes.service';
@@ -21,7 +22,7 @@ import { UpdateClassDto } from './dto/update-class.dto';
 
 // 7. Amankan SELURUH controller ini agar hanya bisa diakses oleh ADMIN
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(sharedTypes.Role.ADMIN)
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
@@ -36,7 +37,23 @@ export class ClassesController {
     return this.classesService.findAll();
   }
 
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * Melihat semua kelas yang diajar (GET /classes/my)
+   */
+  @Get('my')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(sharedTypes.Role.LECTURER)
+  findMyClasses(@GetUser() user: sharedTypes.AuthenticatedUser) {
+    return this.classesService.findMyClasses(user);
+  }
+
   @Get(':id')
+  @Roles(
+    sharedTypes.Role.ADMIN,
+    sharedTypes.Role.LECTURER,
+    sharedTypes.Role.STUDENT,
+  )
   findOne(@Param('id', ParseIntPipe) id: number) {
     // <-- 8. Terapkan ParseIntPipe
     return this.classesService.findOne(id);

@@ -18,6 +18,18 @@ export class UsersService {
         roleName: true,
       },
     },
+    student: {
+      select: {
+        nim: true,
+        name: true,
+      },
+    },
+    lecturer: {
+      select: {
+        nidn: true,
+        name: true,
+      },
+    },
   };
 
   async create(createUserDto: CreateUserDto) {
@@ -46,12 +58,10 @@ export class UsersService {
 
   async findAll() {
     try {
-      const users = await this.prisma.user.findMany();
-      return {
-        status: 200,
-        message: 'Users fetched successfully',
-        data: users,
-      };
+      const users = await this.prisma.user.findMany({
+        select: this.userSelect,
+      });
+      return users;
     } catch (error) {
       return {
         status: 400,

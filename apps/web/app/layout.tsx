@@ -1,9 +1,9 @@
 // 📁 apps/web/app/layout.tsx
+import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import AuthInitializer from '../components/AuthInitializer';
 import './globals.css'; // Ini sekarang berisi Tailwind CSS
-
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -24,6 +24,7 @@ export default function RootLayout({
       <body className={`${inter.className} dark antialiased bg-background text-foreground`}>
         <AuthInitializer />
         {children}
+        <Toaster />
       </body>
     </html>
   );

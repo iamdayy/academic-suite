@@ -114,4 +114,40 @@ export class AssignmentsService {
       where: { id },
     });
   }
+
+  /**
+   * [BARU] [UNTUK STUDENT]
+   * Menampilkan semua tugas dari semua kelas yang diikuti.
+   */
+  async findMyAssignments(user: AuthenticatedUser) {
+    // 1. Pastikan user adalah Student
+    if (!user.student) {
+      throw new UnauthorizedException('User is not a student');
+    }
+    const studentId = user.student.id;
+
+    // 2. Dapatkan semua ID kelas yang diikuti student
+    const enrollments = await this.prisma.classStudent.findMany({
+      where: { studentId: studentId },
+      select: { classId: true }, // Hanya butuh ID kelas
+    });
+
+    // Ubah [ { classId: 1 }, { classId: 2 } ] menjadi [ 1, 2 ]
+    const classIds = enrollments.map((en) => en.classId);
+
+    // 3. Dapatkan semua tugas dari daftar kelas tersebut
+    return this.prisma.assignment.findMany({
+      where: {
+        classId: {
+          in: classIds, // Filter: 'dimana classId ada di dalam array classIds'
+        },
+      },
+      include: {
+        class: true, // Sertakan data kelas agar tahu ini tugas apa
+      },
+      orderBy: {
+        deadline: 'asc',
+      },
+    });
+  }
 }
