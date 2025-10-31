@@ -8,7 +8,7 @@ import api from '../lib/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import navigate from 'next/navigation';
+import { useRouter } from 'next/router';
 import { AuthenticatedUser } from 'shared-types';
 
 export default function LoginPage() {
@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const router = useRouter();
+
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function LoginPage() {
         password: password,
       });
       setUser(response.data.user);
-      navigate.redirect('/dashboard');
+      router.push('/dashboard');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       // ... (logika error Anda tidak berubah)
