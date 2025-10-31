@@ -8,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookCopy, BookUser, CalendarDays, Users } from 'lucide-react';
+import {
+  BookCopy,
+  BookUser,
+  CalendarDays,
+  GraduationCap,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -21,7 +28,6 @@ export default function AdminDashboard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Ganti <p> dengan ini */}
         <div className="grid grid-cols-2 gap-4">
           <Button asChild size="lg" variant="default" className="col-span-2">
             <Link href="/admin/academics">
@@ -29,20 +35,30 @@ export default function AdminDashboard() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-        <Link href="/admin/academic-years">
-          <CalendarDays className="mr-2 h-4 w-4" /> Manajemen T.A. & Kelas
-        </Link>
-      </Button>
+            <Link href="/admin/academic-years">
+              <CalendarDays className="mr-2 h-4 w-4" /> Manajemen T.A. & Kelas
+            </Link>
+          </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/admin/users">
               <BookUser className="mr-2 h-4 w-4" /> Manajemen User
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-                <Link href="/admin/guardians">
-                  <Users className="mr-2 h-4 w-4" /> Manajemen Wali
-                </Link>
-              </Button>
+            <Link href="/admin/lecturers">
+              <UserCheck className="mr-2 h-4 w-4" /> Manajemen Dosen
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/admin/students">
+              <GraduationCap className="mr-2 h-4 w-4" /> Manajemen Mahasiswa
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/admin/guardians">
+              <Users className="mr-2 h-4 w-4" /> Manajemen Wali
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>
