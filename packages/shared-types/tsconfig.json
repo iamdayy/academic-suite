@@ -1,11 +1,13 @@
 {
   // Ambil konfigurasi dasar dari package tsconfig
-  // "extends": "@tsconfig/base", 
+  "extends": "@repo/typescript-config/base", 
   "compilerOptions": {
     // Tentukan folder output (hasil build)
     "outDir": "dist",
     // Hasilkan file .d.ts agar type-safety tetap terjaga
-    "declaration": true 
+    "declaration": true ,
+    "target": "ES2022",
+    "lib": ["es2022", "dom"]
   },
   // Tentukan file apa saja yang akan di-compile
   "include": ["src"], 
