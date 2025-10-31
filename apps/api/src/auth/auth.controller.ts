@@ -28,7 +28,7 @@ export class AuthController {
   /**
    * Endpoint: POST /auth/login
    */
-  // @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   login(
     @Request() req: { user: sharedTypes.AuthenticatedUser },
