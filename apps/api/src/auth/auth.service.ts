@@ -54,8 +54,8 @@ export class AuthService {
     // 3. Simpan token di HTTP-Only cookie
     response.cookie('access_token', token, {
       httpOnly: true, // JavaScript frontend tidak bisa mengakses
-      secure: process.env.NODE_ENV === 'production', // Hanya HTTPS di produksi
-      sameSite: 'strict', // Proteksi CSRF
+      secure: true, // Hanya HTTPS di produksi
+      sameSite: 'none', // Proteksi CSRF
       expires: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // Kadaluwarsa 1 hari
     });
 

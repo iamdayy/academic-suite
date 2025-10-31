@@ -57,8 +57,8 @@ export class AuthController {
     // 3. Bersihkan cookie
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: true,
+      sameSite: 'none',
     });
     return { message: 'Logout successful' };
   }
