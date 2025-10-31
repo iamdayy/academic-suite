@@ -1,21 +1,21 @@
 // 📁 apps/api/src/classes/classes.controller.ts
 
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query, // <-- 1. Impor
-  UseGuards, // <-- 2. Impor
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query, // <-- 1. Impor
+    UseGuards, // <-- 2. Impor
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
 import * as sharedTypes from 'shared-types'; // <-- 6. Impor
-import { GetUser } from 'src/auth/decorators/user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator'; // <-- 5. Impor
+import { GetUser } from '../auth/decorators/user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard'; // <-- 4. Impor
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';

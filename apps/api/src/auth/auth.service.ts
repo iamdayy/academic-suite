@@ -8,7 +8,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { AuthenticatedUser, Role } from 'shared-types';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { RegisterStudentDto } from './dto/register-student.dto';
 

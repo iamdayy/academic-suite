@@ -1,18 +1,18 @@
 // 📁 apps/api/src/class-enrollment/class-enrollment.controller.ts
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import * as sharedTypes from 'shared-types';
-import { GetUser } from 'src/auth/decorators/user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { GetUser } from '../auth/decorators/user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { ClassEnrollmentService } from './class-enrollments.service';
 import { EnrollStudentDto } from './dto/create-class-enrollment.dto';

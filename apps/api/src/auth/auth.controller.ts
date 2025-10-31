@@ -12,7 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import express from 'express';
 import * as sharedTypes from 'shared-types';
-import { JwtAuthGuard } from 'src/users/users.controller';
+import { JwtAuthGuard } from '../users/users.controller';
 import { AuthService } from './auth.service';
 import { GetUser } from './decorators/user.decorator';
 import { RegisterStudentDto } from './dto/register-student.dto';
