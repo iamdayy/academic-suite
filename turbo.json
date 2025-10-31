@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_POSTGRES_PRISMA_URL"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
@@ -14,6 +15,8 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "env": ["DATABASE_POSTGRES_PRISMA_URL"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "cache": false,
       "persistent": true
     }
