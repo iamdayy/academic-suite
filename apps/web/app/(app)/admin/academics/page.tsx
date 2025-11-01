@@ -1,7 +1,8 @@
 // 📁 apps/web/app/admin/majors/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { EditMajorDialog } from "@/components/dialogs/EditMajorDialog";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -22,10 +23,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { Loader2, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import api from "@/lib/api";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // 1. Definisikan tipe data Major
@@ -49,11 +50,11 @@ export default function MajorsPage() {
   const fetchMajors = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/majors');
+      const response = await api.get("/majors");
       setMajors(response.data);
     } catch (error) {
       console.error("Gagal mengambil data jurusan:", error);
-      toast.error('Gagal mengambil data jurusan.');
+      toast.error("Gagal mengambil data jurusan.");
     } finally {
       setIsLoading(false);
     }
@@ -70,27 +71,44 @@ export default function MajorsPage() {
     setIsSubmitting(true);
 
     try {
-      await api.post('/majors', { name: newMajorName });
-      toast.success('Jurusan berhasil ditambahkan!');
-      
+      await api.post("/majors", { name: newMajorName });
+      toast.success("Jurusan berhasil ditambahkan!");
+
       setIsDialogOpen(false); // Tutup dialog
       setNewMajorName(""); // Reset form
       fetchMajors(); // Ambil ulang data agar tabel ter-update
-
     } catch (error: any) {
       console.error("Gagal menambah jurusan:", error);
-      toast.error('Gagal menambah jurusan.');
+      toast.error("Gagal menambah jurusan.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  const handleDelete = async (majorId: bigint, majorName: string) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus jurusan "${majorName}"? Ini tidak bisa diurungkan.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/majors/${majorId}`);
+      toast.success("Berhasil menghapus jurusan!");
+      fetchMajors(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus jurusan:", error);
+      toast.error("Terjadi kesalahan saat menghapus jurusan.");
     }
   };
 
   // 7. Format tanggal (Helper)
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
@@ -98,7 +116,7 @@ export default function MajorsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manajemen Akademik (Jurusan)</h1>
-        
+
         {/* 8. Tombol & Dialog untuk Tambah Baru */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -135,7 +153,9 @@ export default function MajorsPage() {
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -166,14 +186,21 @@ export default function MajorsPage() {
                 <TableCell className="font-medium">{major.name}</TableCell>
                 <TableCell>{formatDate(major.createdAt)}</TableCell>
                 <TableCell>
-                  {/* --- 3. UBAH TOMBOL INI --- */}
                   <Button variant="outline" size="sm" asChild>
-                    {/* Arahkan ke level drill-down berikutnya */}
                     <Link href={`/admin/academics/${major.id}`}>
-                      Kelola
+                      Kelola Prodi
                     </Link>
                   </Button>
-                  {/* ------------------------- */}
+
+                  <EditMajorDialog major={major} onSuccess={fetchMajors} />
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(major.id, major.name)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

@@ -1,30 +1,31 @@
 // 📁 apps/web/app/(app)/admin/academic-years/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { EditAcademicYearDialog } from "@/components/dialogs/EditAcademicYearDialog";
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { Loader2, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import api from "@/lib/api";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface AcademicYear {
@@ -50,7 +51,7 @@ export default function AcademicYearsPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/academic-years');
+      const response = await api.get("/academic-years");
       setYears(response.data);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
@@ -68,7 +69,7 @@ export default function AcademicYearsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/academic-years', {
+      await api.post("/academic-years", {
         year: newYear,
         semester: newSemester,
         startDate: new Date(newStartDate), // DTO kita menerima Tipe Date
@@ -76,7 +77,10 @@ export default function AcademicYearsPage() {
       });
       toast.success("Tahun ajaran berhasil ditambahkan.");
       setIsDialogOpen(false);
-      setNewYear(""); setNewSemester(""); setNewStartDate(""); setNewEndDate("");
+      setNewYear("");
+      setNewSemester("");
+      setNewStartDate("");
+      setNewEndDate("");
       fetchData();
     } catch (error: any) {
       console.error("Gagal menambah:", error);
@@ -86,9 +90,28 @@ export default function AcademicYearsPage() {
     }
   };
 
+  const handleDelete = async (yearId: bigint, yearName: string) => {
+    if (
+      !confirm(`Apakah Anda yakin ingin menghapus tahun ajaran "${yearName}"?`)
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/academic-years/${yearId}`);
+      toast.success("Tahun ajaran berhasil dihapus.");
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus:", error);
+      toast.error("Terjadi kesalahan saat menghapus tahun ajaran.");
+    }
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric', month: 'long', year: 'numeric'
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
@@ -104,29 +127,59 @@ export default function AcademicYearsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <form onSubmit={handleSubmit}>
-              <DialogHeader><DialogTitle>Tambah Tahun Ajaran Baru</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Tambah Tahun Ajaran Baru</DialogTitle>
+              </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="year">Tahun (Cth: 2024/2025)</Label>
-                  <Input id="year" value={newYear} onChange={(e) => setNewYear(e.target.value)} required />
+                  <Input
+                    id="year"
+                    value={newYear}
+                    onChange={(e) => setNewYear(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="semester">Semester (Cth: GANJIL)</Label>
-                  <Input id="semester" value={newSemester} onChange={(e) => setNewSemester(e.target.value)} required />
+                  <Input
+                    id="semester"
+                    value={newSemester}
+                    onChange={(e) => setNewSemester(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Tanggal Mulai</Label>
-                  <Input id="startDate" type="date" value={newStartDate} onChange={(e) => setNewStartDate(e.target.value)} required />
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={newStartDate}
+                    onChange={(e) => setNewStartDate(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endDate">Tanggal Selesai</Label>
-                  <Input id="endDate" type="date" value={newEndDate} onChange={(e) => setNewEndDate(e.target.value)} required />
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={newEndDate}
+                    onChange={(e) => setNewEndDate(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="secondary">Batal</Button></DialogClose>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Batal
+                  </Button>
+                </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -136,7 +189,9 @@ export default function AcademicYearsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center mt-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+        <div className="flex justify-center mt-10">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       ) : (
         <Table>
           <TableHeader>
@@ -160,6 +215,20 @@ export default function AcademicYearsPage() {
                     <Link href={`/admin/academic-years/${year.id}`}>
                       Kelola Kelas
                     </Link>
+                  </Button>
+                  <EditAcademicYearDialog
+                    academicYear={year}
+                    onSuccess={fetchData}
+                  />
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() =>
+                      handleDelete(year.id, `${year.year} ${year.semester}`)
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

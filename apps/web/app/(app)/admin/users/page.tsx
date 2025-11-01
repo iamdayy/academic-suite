@@ -1,6 +1,7 @@
 // 📁 apps/web/app/admin/users/page.tsx
 "use client";
 
+import { EditUserDialog } from "@/components/dialogs/EditUserDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,13 +31,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { AuthenticatedUser, Role } from "shared-types"; // Impor tipe Role
 import { toast } from "sonner";
 
 // 1. Definisikan tipe data (AuthenticatedUser sudah cocok)
-type User = AuthenticatedUser;
+interface User extends Omit<AuthenticatedUser, "role"> {
+  role: {
+    id: bigint;
+    roleName: Role;
+  };
+}
 
 // Tipe untuk dropdown
 interface ApiRole {
@@ -111,6 +117,25 @@ export default function UsersPage() {
       toast.error("Terjadi kesalahan saat menambah user.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (userId: bigint, userEmail: string) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus user "${userEmail}"? Ini akan menghapus profil tertaut.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/users/${userId}`); // API ini sudah ada
+      toast.success("User berhasil dihapus.");
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus user:", error);
+      toast.error("Terjadi kesalahan saat menghapus user.");
     }
   };
 
@@ -232,8 +257,20 @@ export default function UsersPage() {
                         : "N/A"}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm">
-                    Edit
+                  <EditUserDialog
+                    user={user}
+                    roles={roles} // Berikan daftar roles ke dialog
+                    onSuccess={fetchData}
+                  />
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(user.id, user.email)}
+                    // Jangan biarkan admin menghapus dirinya sendiri
+                    disabled={user.email === "admin@example.com"}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

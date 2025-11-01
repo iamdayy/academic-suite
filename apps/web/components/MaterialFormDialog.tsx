@@ -3,35 +3,50 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // <-- Kita butuh Textarea
+import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Edit, Loader2, PlusCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 
-// Definisikan props
-interface MaterialFormDialogProps {
-  classId: bigint;
-  // 'onSuccess' adalah fungsi callback untuk me-refresh tabel di halaman induk
-  onSuccess: () => void; 
+// 1. Definisikan tipe data Materi
+interface Material {
+  id: bigint;
+  title: string;
+  content?: string | null;
+  fileUrl?: string | null;
 }
 
-export function MaterialFormDialog({ classId, onSuccess }: MaterialFormDialogProps) {
-  // State untuk form
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
+// 2. Modifikasi props
+interface MaterialFormDialogProps {
+  classId: bigint;
+  material?: Material; // <-- Buat opsional. Jika ada, ini mode Edit
+  onSuccess: () => void;
+}
+
+export function MaterialFormDialog({
+  classId,
+  material,
+  onSuccess,
+}: MaterialFormDialogProps) {
+  // 3. Tentukan mode berdasarkan props
+  const isEditMode = !!material;
+
+  // 4. Isi form dengan data yang ada (jika mode edit)
+  const [title, setTitle] = useState(material?.title || "");
+  const [content, setContent] = useState(material?.content || "");
+  const [fileUrl, setFileUrl] = useState(material?.fileUrl || "");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -40,51 +55,75 @@ export function MaterialFormDialog({ classId, onSuccess }: MaterialFormDialogPro
     e.preventDefault();
     setIsLoading(true);
 
+    const payload = {
+      title,
+      content,
+      fileUrl,
+      classId: Number(classId),
+    };
+
     try {
-      // Panggil API POST /materials
-      await api.post('/materials', {
-        title,
-        content,
-        fileUrl,
-        classId: Number(classId), // Konversi bigint ke number
-      });
+      if (isEditMode) {
+        // 5. Panggil API PATCH jika mode Edit
+        await api.patch(`/materials/${material.id}`, payload);
+        toast.success("Berhasil mengupdate materi!");
+      } else {
+        // 6. Panggil API POST jika mode Tambah
+        await api.post("/materials", payload);
+        toast.success("Berhasil menambahkan materi!");
+      }
 
-      toast.success("Materi berhasil ditambahkan!");
-
-      setIsOpen(false); // Tutup dialog
-      // Reset form
-      setTitle("");
-      setContent("");
-      setFileUrl("");
-
+      setIsOpen(false);
       onSuccess(); // Panggil callback untuk refresh data!
-
     } catch (error: any) {
-      console.error("Gagal menambah materi:", error);
-      toast.error("Gagal menambah materi.");
+      console.error("Gagal memproses materi:", error);
+      toast.error("Gagal memproses materi.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 7. Reset form saat dialog ditutup (jika mode Tambah)
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isEditMode) {
+      setTitle("");
+      setContent("");
+      setFileUrl("");
+    }
+    setIsOpen(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="mb-4">
+        {/* 8. Tampilkan tombol yang berbeda untuk Edit vs Tambah */}
+        {isEditMode ? (
+          <Button variant="ghost" size="sm">
+            <Edit className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button className="mb-4">
             <PlusCircle className="mr-2 h-4 w-4" /> Tambah Materi Baru
-        </Button>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Tambah Materi Baru</DialogTitle>
+            <DialogTitle>
+              {isEditMode
+                ? `Edit Materi: ${material.title}`
+                : "Tambah Materi Baru"}
+            </DialogTitle>
             <DialogDescription>
-              Isi detail materi untuk kelas ini.
+              {isEditMode
+                ? "Ubah detail materi di bawah ini."
+                : "Isi detail materi untuk kelas ini."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            {/* Input Judul */}
+            {/* ... (Form Input tidak berubah) ... */}
             <div className="space-y-2">
               <Label htmlFor="title">Judul</Label>
               <Input
@@ -94,25 +133,21 @@ export function MaterialFormDialog({ classId, onSuccess }: MaterialFormDialogPro
                 required
               />
             </div>
-            {/* Input Konten/Deskripsi */}
             <div className="space-y-2">
               <Label htmlFor="content">Deskripsi (Opsional)</Label>
               <Textarea
                 id="content"
-                value={content}
+                value={content ?? ""}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Tulis deskripsi singkat materi di sini..."
               />
             </div>
-            {/* Input URL File */}
             <div className="space-y-2">
               <Label htmlFor="fileUrl">URL File (Opsional)</Label>
               <Input
                 id="fileUrl"
                 type="url"
-                value={fileUrl}
+                value={fileUrl ?? ""}
                 onChange={(e) => setFileUrl(e.target.value)}
-                placeholder="https://google-drive.com/file..."
               />
             </div>
           </div>

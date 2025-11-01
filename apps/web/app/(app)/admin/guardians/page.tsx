@@ -1,39 +1,40 @@
 // 📁 apps/web/app/(app)/admin/guardians/page.tsx
 "use client";
 
-import { ConnectStudentDialog } from '@/components/dialogs/ConnectStudentDialog';
-import { Button } from '@/components/ui/button';
+import { ConnectStudentDialog } from "@/components/dialogs/ConnectStudentDialog";
+import { EditGuardianDialog } from "@/components/dialogs/EditGuardianDialog";
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { Loader2, PlusCircle } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
-import { AuthenticatedUser, Role } from 'shared-types';
+import api from "@/lib/api";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { AuthenticatedUser, Role } from "shared-types";
 import { toast } from "sonner";
 
 // Definisikan tipe data
@@ -64,8 +65,8 @@ export default function GuardiansPage() {
     try {
       setIsLoading(true);
       const [guardiansRes, usersRes] = await Promise.all([
-        api.get('/guardians'),
-        api.get('/users') // Ambil semua user
+        api.get("/guardians"),
+        api.get("/users"), // Ambil semua user
       ]);
       setGuardians(guardiansRes.data);
       // Filter user yang rolenya GUARDIAN dan belum punya profil
@@ -89,13 +90,13 @@ export default function GuardiansPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedUserId || !newName) {
-      toast.error("Semua field harus diisi.")
+      toast.error("Semua field harus diisi.");
       return;
     }
     setIsSubmitting(true);
 
     try {
-      await api.post('/guardians', {
+      await api.post("/guardians", {
         name: newName,
         phone: newPhone,
         userId: Number(selectedUserId),
@@ -107,12 +108,30 @@ export default function GuardiansPage() {
       setNewPhone("");
       setSelectedUserId("");
       fetchData(); // Refresh data
-
     } catch (error: any) {
       console.error("Gagal menambah wali:", error);
       toast.error("Terjadi kesalahan saat menambah wali.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (guardianId: bigint, guardianName: string) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus profil wali "${guardianName}"? Ini tidak akan menghapus akun User-nya.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/guardians/${guardianId}`); // API ini sudah ada
+      toast.success("Profil wali berhasil dihapus.");
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus wali:", error);
+      toast.error("Terjadi kesalahan saat menghapus wali.");
     }
   };
 
@@ -137,13 +156,20 @@ export default function GuardiansPage() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="user">Akun User (Guardian)</Label>
-                  <Select value={selectedUserId} onValueChange={setSelectedUserId} required>
+                  <Select
+                    value={selectedUserId}
+                    onValueChange={setSelectedUserId}
+                    required
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Akun User..." />
                     </SelectTrigger>
                     <SelectContent>
                       {users.map((user) => (
-                        <SelectItem key={user.id.toString()} value={user.id.toString()}>
+                        <SelectItem
+                          key={user.id.toString()}
+                          value={user.id.toString()}
+                        >
                           {user.email}
                         </SelectItem>
                       ))}
@@ -176,7 +202,9 @@ export default function GuardiansPage() {
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -206,17 +234,26 @@ export default function GuardiansPage() {
               <TableRow key={g.id.toString()}>
                 <TableCell>{g.id.toString()}</TableCell>
                 <TableCell className="font-medium">{g.name}</TableCell>
-                <TableCell>{g.phone || '-'}</TableCell>
+                <TableCell>{g.phone || "-"}</TableCell>
                 <TableCell>{g.user.email}</TableCell>
                 <TableCell>
-                  {g.students.map(s => s.student.name).join(', ') || '-'}
+                  {g.students.map((s) => s.student.name).join(", ") || "-"}
                 </TableCell>
                 <TableCell>
-                    <ConnectStudentDialog
-                      guardianId={g.id}
-                      guardianName={g.name}
-                      onSuccess={fetchData} // Panggil fungsi refresh!
-                    />
+                  <ConnectStudentDialog
+                    guardianId={g.id}
+                    guardianName={g.name}
+                    onSuccess={fetchData} // Panggil fungsi refresh!
+                  />
+                  <EditGuardianDialog guardian={g} onSuccess={fetchData} />
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(g.id, g.name)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

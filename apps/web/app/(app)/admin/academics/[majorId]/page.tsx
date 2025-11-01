@@ -1,42 +1,50 @@
 // 📁 apps/web/app/(app)/admin/academics/[majorId]/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { EditStudyProgramDialog } from "@/components/dialogs/EditStudyProgramDialog";
+import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardDescription,
-    CardHeader,
-    CardTitle
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { ChevronLeft, Loader2, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import api from "@/lib/api";
+import { ChevronLeft, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Definisikan tipe data
-interface Major { id: bigint; name: string; }
-interface StudyProgram { id: bigint; name: string; level: string; }
+interface Major {
+  id: bigint;
+  name: string;
+}
+interface StudyProgram {
+  id: bigint;
+  name: string;
+  level: string;
+}
 
 export default function MajorDetailPage() {
   const params = useParams();
@@ -62,7 +70,7 @@ export default function MajorDetailPage() {
       // Panggil 2 API: detail major DAN daftar prodi yang difilter
       const [majorRes, prodiRes] = await Promise.all([
         api.get(`/majors/${majorId}`),
-        api.get(`/study-programs?majorId=${majorId}`) // <-- Gunakan API baru
+        api.get(`/study-programs?majorId=${majorId}`), // <-- Gunakan API baru
       ]);
       setMajor(majorRes.data);
       setStudyPrograms(prodiRes.data);
@@ -85,17 +93,16 @@ export default function MajorDetailPage() {
     try {
       // Panggil API POST /study-programs
       // majorId diambil dari URL, bukan dropdown
-      await api.post('/study-programs', {
+      await api.post("/study-programs", {
         name: newName,
         level: newLevel,
-        majorId: Number(majorId), 
+        majorId: Number(majorId),
       });
       toast.success("Prodi berhasil ditambahkan.");
       setIsDialogOpen(false);
       setNewName("");
       setNewLevel("");
       fetchData(); // Refresh tabel
-
     } catch (error: any) {
       console.error("Gagal menambah prodi:", error);
       toast.error(error.response.data.message);
@@ -104,14 +111,37 @@ export default function MajorDetailPage() {
     }
   };
 
+  const handleDeleteProdi = async (prodiId: bigint, prodiName: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus prodi "${prodiName}"?`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/study-programs/${prodiId}`);
+      toast.success(`Prodi "${prodiName}" berhasil dihapus.`);
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus prodi:", error);
+      toast.error(error.response.data.message);
+    }
+  };
   if (isLoading) {
-    return <div className="flex justify-center mt-10"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    return (
+      <div className="flex justify-center mt-10">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
   if (!major) return <p>Jurusan tidak ditemukan.</p>;
 
   return (
     <div>
-      <Button variant="outline" size="sm" onClick={() => router.push('/admin/academics')} className="mb-4">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => router.push("/admin/academics")}
+        className="mb-4"
+      >
         <ChevronLeft className="h-4 w-4 mr-2" />
         Kembali ke Daftar Jurusan
       </Button>
@@ -138,22 +168,41 @@ export default function MajorDetailPage() {
           <DialogContent className="sm:max-w-[425px]">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>Tambah Prodi Baru (Jurusan: {major.name})</DialogTitle>
+                <DialogTitle>
+                  Tambah Prodi Baru (Jurusan: {major.name})
+                </DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nama Prodi</Label>
-                  <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+                  <Input
+                    id="name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="level">Jenjang</Label>
-                  <Input id="level" placeholder="Contoh: S1" value={newLevel} onChange={(e) => setNewLevel(e.target.value)} required />
+                  <Input
+                    id="level"
+                    placeholder="Contoh: S1"
+                    value={newLevel}
+                    onChange={(e) => setNewLevel(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="secondary">Batal</Button></DialogClose>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Batal
+                  </Button>
+                </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -179,10 +228,22 @@ export default function MajorDetailPage() {
               <TableCell>{prodi.level}</TableCell>
               <TableCell>
                 <Button variant="outline" size="sm" asChild>
-                  {/* Link ke Level 3 */}
                   <Link href={`/admin/academics/${majorId}/${prodi.id}`}>
                     Kelola Kurikulum
                   </Link>
+                </Button>
+
+                <EditStudyProgramDialog
+                  studyProgram={prodi}
+                  onSuccess={fetchData}
+                />
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteProdi(prodi.id, prodi.name)}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>

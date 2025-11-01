@@ -1,6 +1,7 @@
 // 📁 apps/web/app/(app)/admin/students/page.tsx
 "use client";
 
+import { EditStudentDialog } from "@/components/dialogs/EditStudentDiaog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { AuthenticatedUser, Role } from "shared-types";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ interface Student {
     email: string;
   } | null;
   studyProgram: {
+    id: bigint; // Add id to studyProgram
     name: string;
   };
 }
@@ -133,6 +135,25 @@ export default function StudentsPage() {
       toast.error("Terjadi kesalahan saat menambah mahasiswa.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (studentId: bigint, studentName: string) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus profil mahasiswa "${studentName}"? Ini tidak akan menghapus akun User-nya.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/students/${studentId}`); // API ini sudah ada
+      toast.success("Profil mahasiswa berhasil dihapus.");
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus mahasiswa:", error);
+      toast.error("Terjadi kesalahan saat menghapus mahasiswa.");
     }
   };
 
@@ -267,8 +288,18 @@ export default function StudentsPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm">
-                    Edit
+                  <EditStudentDialog
+                    student={student}
+                    studyPrograms={studyPrograms} // Berikan daftar prodi ke dialog
+                    onSuccess={fetchData}
+                  />
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(student.id, student.name)}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

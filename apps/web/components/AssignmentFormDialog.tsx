@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -16,20 +15,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Edit, Loader2, PlusCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 
-interface AssignmentFormDialogProps {
-  classId: bigint;
-  onSuccess: () => void; // Callback untuk me-refresh tabel
+// 1. Definisikan tipe data Tugas
+interface Assignment {
+  id: bigint;
+  title: string;
+  description: string;
+  deadline: string; // ISO string
 }
 
-export function AssignmentFormDialog({ classId, onSuccess }: AssignmentFormDialogProps) {
-  // State untuk form
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [deadline, setDeadline] = useState(""); // Kita pakai string YYYY-MM-DDTHH:MM
+// 2. Modifikasi props
+interface AssignmentFormDialogProps {
+  classId: bigint;
+  assignment?: Assignment; // <-- Buat opsional. Jika ada, ini mode Edit
+  onSuccess: () => void;
+}
+
+// Helper untuk format YYYY-MM-DDTHH:MM
+const formatDateTimeForInput = (isoString: string | undefined) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  // Geser ke timezone lokal dan format
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 16);
+};
+
+export function AssignmentFormDialog({
+  classId,
+  assignment,
+  onSuccess,
+}: AssignmentFormDialogProps) {
+  // 3. Tentukan mode berdasarkan props
+  const isEditMode = !!assignment;
+
+  // 4. Isi form dengan data yang ada (jika mode edit)
+  const [title, setTitle] = useState(assignment?.title || "");
+  const [description, setDescription] = useState(assignment?.description || "");
+  const [deadline, setDeadline] = useState(
+    formatDateTimeForInput(assignment?.deadline) || ""
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,51 +65,70 @@ export function AssignmentFormDialog({ classId, onSuccess }: AssignmentFormDialo
     e.preventDefault();
     setIsLoading(true);
 
+    const payload = {
+      title,
+      description,
+      deadline: new Date(deadline).toISOString(), // Konversi ke ISO Date
+      classId: Number(classId),
+    };
+
     try {
-      // Panggil API POST /assignments
-      await api.post('/assignments', {
-        title,
-        description,
-        deadline: new Date(deadline).toISOString(), // Konversi ke ISO Date
-        classId: Number(classId),
-      });
+      if (isEditMode) {
+        // 5. Panggil API PATCH jika mode Edit
+        await api.patch(`/assignments/${assignment.id}`, payload);
+        toast.success("Berhasil mengupdate tugas!");
+      } else {
+        // 6. Panggil API POST jika mode Tambah
+        await api.post("/assignments", payload);
+        toast.success("Berhasil menambahkan tugas!");
+      }
 
-      toast.success("Tugas berhasil ditambahkan!");
-
-      setIsOpen(false); // Tutup dialog
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setDeadline("");
-
+      setIsOpen(false);
       onSuccess(); // Panggil callback untuk refresh data!
-
     } catch (error: any) {
-      console.error("Gagal menambah tugas:", error);
-      toast.error("Gagal menambah tugas.");
+      console.error("Gagal memproses tugas:", error);
+      toast.error("Gagal memproses tugas.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 7. Reset form saat dialog ditutup (jika mode Tambah)
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isEditMode) {
+      setTitle("");
+      setDescription("");
+      setDeadline("");
+    }
+    setIsOpen(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="mb-4">
+        {/* 8. Tampilkan tombol yang berbeda untuk Edit vs Tambah */}
+        {isEditMode ? (
+          <Button variant="ghost" size="sm">
+            <Edit className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button className="mb-4">
             <PlusCircle className="mr-2 h-4 w-4" /> Tambah Tugas Baru
-        </Button>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Tambah Tugas Baru</DialogTitle>
-            <DialogDescription>
-              Isi detail tugas untuk kelas ini.
-            </DialogDescription>
+            <DialogTitle>
+              {isEditMode
+                ? `Edit Tugas: ${assignment.title}`
+                : "Tambah Tugas Baru"}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            {/* Input Judul */}
+            {/* ... (Form Input tidak berubah) ... */}
             <div className="space-y-2">
               <Label htmlFor="title">Judul Tugas</Label>
               <Input
@@ -92,23 +138,20 @@ export function AssignmentFormDialog({ classId, onSuccess }: AssignmentFormDialo
                 required
               />
             </div>
-            {/* Input Deskripsi */}
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Jelaskan detail tugas di sini..."
                 required
               />
             </div>
-            {/* Input Deadline */}
             <div className="space-y-2">
               <Label htmlFor="deadline">Deadline</Label>
               <Input
                 id="deadline"
-                type="datetime-local" // Input tanggal & waktu
+                type="datetime-local"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
                 required

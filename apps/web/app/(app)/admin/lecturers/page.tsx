@@ -1,38 +1,39 @@
 // 📁 apps/web/app/(app)/admin/lecturers/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { EditLecturerDialog } from "@/components/dialogs/EditLecturerDialog";
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { Loader2, PlusCircle } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
-import { AuthenticatedUser, Role } from 'shared-types';
+import api from "@/lib/api";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { AuthenticatedUser, Role } from "shared-types";
 import { toast } from "sonner";
 
 // Definisikan tipe data
@@ -62,8 +63,8 @@ export default function LecturersPage() {
     try {
       setIsLoading(true);
       const [lecturersRes, usersRes] = await Promise.all([
-        api.get('/lecturers'),
-        api.get('/users') // Ambil semua user
+        api.get("/lecturers"),
+        api.get("/users"), // Ambil semua user
       ]);
       setLecturers(lecturersRes.data);
       // Filter user yang rolenya LECTURER dan belum punya profil
@@ -93,24 +94,42 @@ export default function LecturersPage() {
     setIsSubmitting(true);
 
     try {
-      await api.post('/lecturers', {
+      await api.post("/lecturers", {
         name: newName,
         nidn: newNidn,
         userId: Number(selectedUserId),
       });
       toast.success("Profil dosen berhasil ditambahkan.");
-      
+
       setIsDialogOpen(false);
       setNewName("");
       setNewNidn("");
       setSelectedUserId("");
       fetchData(); // Refresh data
-
     } catch (error: any) {
       console.error("Gagal menambah dosen:", error);
       toast.error("Terjadi kesalahan saat menambah dosen.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (lecturerId: bigint, lecturerName: string) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus profil dosen "${lecturerName}"? Ini tidak akan menghapus akun User-nya.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/lecturers/${lecturerId}`); // API ini sudah ada
+      toast.success("Profil dosen berhasil dihapus.");
+      fetchData(); // Refresh tabel
+    } catch (error: any) {
+      console.error("Gagal menghapus dosen:", error);
+      toast.error("Terjadi kesalahan saat menghapus dosen.");
     }
   };
 
@@ -135,13 +154,20 @@ export default function LecturersPage() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="user">Akun User (Lecturer)</Label>
-                  <Select value={selectedUserId} onValueChange={setSelectedUserId} required>
+                  <Select
+                    value={selectedUserId}
+                    onValueChange={setSelectedUserId}
+                    required
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Akun User..." />
                     </SelectTrigger>
                     <SelectContent>
                       {users.map((user) => (
-                        <SelectItem key={user.id.toString()} value={user.id.toString()}>
+                        <SelectItem
+                          key={user.id.toString()}
+                          value={user.id.toString()}
+                        >
                           {user.email}
                         </SelectItem>
                       ))}
@@ -174,7 +200,9 @@ export default function LecturersPage() {
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -208,6 +236,17 @@ export default function LecturersPage() {
                 <TableCell>
                   <Button variant="outline" size="sm">
                     Edit
+                  </Button>
+                  <EditLecturerDialog
+                    lecturer={lecturer}
+                    onSuccess={fetchData}
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(lecturer.id, lecturer.name)}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

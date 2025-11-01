@@ -1,9 +1,9 @@
 // 📁 apps/web/app/(app)/layout.tsx
 "use client";
 
-import ClientAuthGuard from '@/components/ClientAuthGuard';
+import ClientAuthGuard from "@/components/ClientAuthGuard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,16 +12,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import api from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
-import { BookCopy, CalendarDays, LayoutDashboard, LogOut } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Role } from 'shared-types';
+import api from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
+import {
+  BookCopy,
+  BookUser,
+  CalendarDays,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Role } from "shared-types";
 
 // Komponen untuk link di Sidebar
-function SidebarLink({ href, children }: { href: string; children: React.ReactNode }) {
+function SidebarLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <Button variant="ghost" className="w-full justify-start" asChild>
       <Link href={href}>{children}</Link>
@@ -34,56 +49,72 @@ interface IRoute {
   href: string;
   icon: any;
 }
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAuthStore();
-  const [ routes, setRoutes ] = useState<IRoute[]>([]);
+  const [routes, setRoutes] = useState<IRoute[]>([]);
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     } finally {
       setUser(null);
-      router.push('/');
+      router.push("/");
     }
   };
 
   const adminRoutes: IRoute[] = [
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: "Dashboard",
+      href: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      name: 'Manajemen Akademik',
-      href: '/admin/academics',
+      name: "Manajemen Akademik",
+      href: "/admin/academics",
       icon: BookCopy,
     },
     {
       name: "Manajemen T.A. & Kelas",
       href: "/admin/academic-years",
       icon: CalendarDays,
-    }
+    },
+    {
+      name: "Manajemen User",
+      href: "/admin/users",
+      icon: BookUser,
+    },
+    {
+      name: "Manajemen Dosen",
+      href: "/admin/lecturers",
+      icon: UserCheck,
+    },
+    {
+      name: "Manajemen Mahasiswa",
+      href: "/admin/students",
+      icon: GraduationCap,
+    },
+    {
+      name: "Manajemen Wali",
+      href: "/admin/guardians",
+      icon: Users,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: "Dashboard",
+      href: "/dashboard",
       icon: LayoutDashboard,
-    }
+    },
   ];
   const studentRoutes: IRoute[] = [
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: "Dashboard",
+      href: "/dashboard",
       icon: LayoutDashboard,
-    }
+    },
   ];
 
   useEffect(() => {
@@ -96,9 +127,8 @@ export default function AppLayout({
     }
   }, [user, setRoutes]);
 
-
-  const getInitials = (email: string = '') => {
-    return email[0]?.toUpperCase() || 'U';
+  const getInitials = (email: string = "") => {
+    return email[0]?.toUpperCase() || "U";
   };
 
   return (
@@ -109,16 +139,15 @@ export default function AppLayout({
         <aside className="w-64 border-r bg-background p-4 flex flex-col">
           <h2 className="text-2xl font-bold mb-6">ACADEMIC SUITE</h2>
           <nav className="flex flex-col space-y-2 grow">
-            {
-              routes.map((route, index) => (
-                <SidebarLink key={index} href={route.href}>
-                  <route.icon className="mr-2 h-4 w-4" /> {route.name}
-                </SidebarLink>
-              ))
-            }
-            
+            {routes.map((route, index) => (
+              <SidebarLink key={index} href={route.href}>
+                <route.icon className="mr-2 h-4 w-4" /> {route.name}
+              </SidebarLink>
+            ))}
           </nav>
-          <div className="text-xs text-muted-foreground">© 2025 Academic Suite</div>
+          <div className="text-xs text-muted-foreground">
+            © 2025 Academic Suite
+          </div>
         </aside>
 
         {/* --- KONTEN UTAMA --- */}
@@ -129,17 +158,24 @@ export default function AppLayout({
               {/* User Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="#" alt="Avatar" />
-                      <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getInitials(user?.email)}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.email}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {user?.email}
+                      </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user?.role.roleName}
                       </p>
@@ -156,9 +192,7 @@ export default function AppLayout({
           </header>
 
           {/* --- ANAK HALAMAN (PAGE) --- */}
-          <main className="flex-1 p-6">
-            {children}
-          </main>
+          <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
     </ClientAuthGuard>
