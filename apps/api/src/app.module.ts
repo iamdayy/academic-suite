@@ -21,6 +21,7 @@ import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { GuardiansModule } from './guardians/guardians.module';
 import { PrerequisitesModule } from './prerequisites/prerequisites.module';
+import { GuardianViewModule } from './guardian-view/guardian-view.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { PrerequisitesModule } from './prerequisites/prerequisites.module';
     RolesModule,
     GuardiansModule,
     PrerequisitesModule,
+    GuardianViewModule,
   ],
   controllers: [AppController],
   providers: [AppService],

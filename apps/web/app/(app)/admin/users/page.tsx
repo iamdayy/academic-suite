@@ -1,42 +1,42 @@
 // 📁 apps/web/app/admin/users/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { Loader2, PlusCircle } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
-import { AuthenticatedUser, Role } from 'shared-types'; // Impor tipe Role
+import api from "@/lib/api";
+import { Loader2, PlusCircle } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { AuthenticatedUser, Role } from "shared-types"; // Impor tipe Role
 import { toast } from "sonner";
 
 // 1. Definisikan tipe data (AuthenticatedUser sudah cocok)
-type User = AuthenticatedUser; 
+type User = AuthenticatedUser;
 
 // Tipe untuk dropdown
 interface ApiRole {
@@ -64,14 +64,14 @@ export default function UsersPage() {
     try {
       setIsLoading(true);
       const [usersRes, rolesRes] = await Promise.all([
-        api.get('/users'),
-        api.get('/roles') // Panggil API baru kita
+        api.get("/users"),
+        api.get("/roles"), // Panggil API baru kita
       ]);
       setUsers(usersRes.data);
       setRoles(rolesRes.data);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
-      toast.error('Terjadi kesalahan saat mengambil data.');
+      toast.error("Terjadi kesalahan saat mengambil data.");
     } finally {
       setIsLoading(false);
     }
@@ -86,19 +86,19 @@ export default function UsersPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedRoleId || !newEmail || !newPassword) {
-        toast.error('Mohon isi semua field.');
+      toast.error("Mohon isi semua field.");
       return;
     }
     setIsSubmitting(true);
 
     try {
       // Panggil endpoint 'POST /users' yang sudah kita buat lama
-      await api.post('/users', {
+      await api.post("/users", {
         email: newEmail,
         password: newPassword,
         roleId: Number(selectedRoleId),
       });
-      toast.success('User berhasil ditambahkan.')
+      toast.success("User berhasil ditambahkan.");
 
       setIsDialogOpen(false); // Tutup dialog
       // Reset form
@@ -106,10 +106,9 @@ export default function UsersPage() {
       setNewPassword("");
       setSelectedRoleId("");
       fetchData(); // Ambil ulang data
-
     } catch (error: any) {
       console.error("Gagal menambah user:", error);
-      toast.error('Terjadi kesalahan saat menambah user.');
+      toast.error("Terjadi kesalahan saat menambah user.");
     } finally {
       setIsSubmitting(false);
     }
@@ -162,13 +161,20 @@ export default function UsersPage() {
                 {/* Select Role */}
                 <div className="space-y-2">
                   <Label htmlFor="role">Peran (Role)</Label>
-                  <Select value={selectedRoleId} onValueChange={setSelectedRoleId} required>
+                  <Select
+                    value={selectedRoleId}
+                    onValueChange={setSelectedRoleId}
+                    required
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Peran" />
                     </SelectTrigger>
                     <SelectContent>
                       {roles.map((role) => (
-                        <SelectItem key={role.id.toString()} value={role.id.toString()}>
+                        <SelectItem
+                          key={role.id.toString()}
+                          value={role.id.toString()}
+                        >
                           {role.roleName}
                         </SelectItem>
                       ))}
@@ -183,7 +189,9 @@ export default function UsersPage() {
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Simpan
                 </Button>
               </DialogFooter>
@@ -215,9 +223,13 @@ export default function UsersPage() {
                 <TableCell className="font-medium">{user.email}</TableCell>
                 <TableCell>{user.role.roleName}</TableCell>
                 <TableCell>
-                  {user.student ? `Student: ${user.student.name}` : 
-                   user.lecturer ? `Lecturer: ${user.lecturer.name}` : 
-                   'N/A'}
+                  {user.student
+                    ? `Student: ${user.student.name}`
+                    : user.lecturer
+                      ? `Lecturer: ${user.lecturer.name}`
+                      : user.guardian
+                        ? `Guardian: ${user.guardian.name}`
+                        : "N/A"}
                 </TableCell>
                 <TableCell>
                   <Button variant="outline" size="sm">

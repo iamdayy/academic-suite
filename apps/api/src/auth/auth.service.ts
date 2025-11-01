@@ -46,8 +46,6 @@ export class AuthService {
    * Dipanggil oleh AuthController untuk men-generate token
    */
   login(user: AuthenticatedUser, response: Response) {
-    // <-- 2. Tambahkan parameter 'response'
-    console.log('id', user.id);
     const payload = { email: user.email, sub: user.id, roleId: user.role.id };
     const token = this.jwtService.sign(payload);
 

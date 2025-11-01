@@ -30,6 +30,11 @@ export class UsersService {
         name: true,
       },
     },
+    guardian: {
+      select: {
+        name: true,
+      },
+    },
   };
 
   async create(createUserDto: CreateUserDto) {
@@ -143,6 +148,7 @@ export class UsersService {
         role: true, // Ambil objek role lengkap
         student: true, // Ambil profil student (jika ada)
         lecturer: true, // Ambil profil lecturer (jika ada)
+        guardian: true, // Ambil profil guardian (jika ada)
       },
     });
 
@@ -163,6 +169,7 @@ export class UsersService {
         role: true,
         student: true,
         lecturer: true,
+        guardian: true,
       },
     });
     if (!user) {
