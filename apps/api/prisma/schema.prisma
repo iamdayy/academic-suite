@@ -39,37 +39,37 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relasi 1-to-1: User ini BISA jadi Student, Lecturer, atau Guardian
-  student   Student?
-  lecturer  Lecturer?
-  guardian  Guardian?
+  student  Student?
+  lecturer Lecturer?
+  guardian Guardian?
 
   @@map("users")
 }
 
 model Student {
-  id             BigInt   @id @default(autoincrement())
-  userId         BigInt?   @unique @map("user_id") // Relasi 1-to-1
-  user           User?     @relation(fields: [userId], references: [id])
-  studyProgramId BigInt   @map("study_program_id")
+  id             BigInt       @id @default(autoincrement())
+  userId         BigInt?      @unique @map("user_id") // Relasi 1-to-1
+  user           User?        @relation(fields: [userId], references: [id])
+  studyProgramId BigInt       @map("study_program_id")
   studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
-  nim            String   @unique
+  nim            String       @unique
   name           String
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Student ini ada di...
-  guardians   GuardianStudent[] // ...daftar wali
-  krsHeaders  KrsHeader[]       // ...daftar KRS
-  classStudents ClassStudent[]    // ...daftar kelas yang diikuti
-  submissions AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
+  guardians     GuardianStudent[] // ...daftar wali
+  krsHeaders    KrsHeader[] // ...daftar KRS
+  classStudents ClassStudent[] // ...daftar kelas yang diikuti
+  submissions   AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
 
   @@map("students")
 }
 
 model Lecturer {
   id        BigInt   @id @default(autoincrement())
-  userId    BigInt   @unique @map("user_id") // Relasi 1-to-1
-  user      User     @relation(fields: [userId], references: [id])
+  userId    BigInt?  @unique @map("user_id") // Relasi 1-to-1
+  user      User?    @relation(fields: [userId], references: [id])
   nidn      String   @unique
   name      String
   createdAt DateTime @default(now()) @map("created_at")
@@ -142,13 +142,13 @@ model StudyProgram {
 }
 
 model Curriculum {
-  id             BigInt   @id @default(autoincrement())
-  studyProgramId BigInt   @map("study_program_id")
+  id             BigInt       @id @default(autoincrement())
+  studyProgramId BigInt       @map("study_program_id")
   studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
   name           String // "Kurikulum 2020", "Kurikulum Merdeka"
   year           Int
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Satu Kurikulum punya banyak Mata Kuliah
   courses Course[]
@@ -161,8 +161,8 @@ model Course {
   curriculumId BigInt     @map("curriculum_id")
   curriculum   Curriculum @relation(fields: [curriculumId], references: [id])
   code         String     @unique // "IF101"
-  name         String     // "Dasar Pemrograman"
-  credits      Int        // SKS
+  name         String // "Dasar Pemrograman"
+  credits      Int // SKS
   semester     Int
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
@@ -170,8 +170,8 @@ model Course {
   // Relasi: Mata kuliah ini...
   prerequisites   Prerequisite[] @relation("coursePrerequisites") // ...memiliki prasyarat
   prerequisiteFor Prerequisite[] @relation("prerequisiteForCourse") // ...menjadi prasyarat
-  krsDetails      KrsDetail[]    // ...ada di detail KRS
-  classes         Class[]        // ...memiliki banyak kelas
+  krsDetails      KrsDetail[] // ...ada di detail KRS
+  classes         Class[] // ...memiliki banyak kelas
 
   @@map("courses")
 }
@@ -193,8 +193,8 @@ model AcademicYear {
   id        BigInt   @id @default(autoincrement())
   year      String // "2024/2025"
   semester  String // "GANJIL", "GENAP"
-  startDate DateTime @db.Date @map("start_date")
-  endDate   DateTime @db.Date @map("end_date")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -207,15 +207,15 @@ model AcademicYear {
 
 // Master KRS (Header)
 model KrsHeader {
-  id             BigInt   @id @default(autoincrement())
-  studentId      BigInt   @map("student_id")
-  student        Student  @relation(fields: [studentId], references: [id])
-  academicYearId BigInt   @map("academic_year_id")
+  id             BigInt       @id @default(autoincrement())
+  studentId      BigInt       @map("student_id")
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId BigInt       @map("academic_year_id")
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   semester       Int // Semester ke- (1, 2, 3...)
   status         String // "DRAFT", "APPROVED", "REJECTED"
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: KRS ini punya banyak...
   krsDetails KrsDetail[]
@@ -243,21 +243,21 @@ model KrsDetail {
 
 // Ini adalah "pelaksanaan" dari sebuah Course di semester tertentu
 model Class {
-  id             BigInt   @id @default(autoincrement())
-  courseId       BigInt   @map("course_id")
-  course         Course   @relation(fields: [courseId], references: [id])
-  lecturerId     BigInt   @map("lecturer_id")
-  lecturer       Lecturer @relation(fields: [lecturerId], references: [id])
-  academicYearId BigInt   @map("academic_year_id")
+  id             BigInt       @id @default(autoincrement())
+  courseId       BigInt       @map("course_id")
+  course         Course       @relation(fields: [courseId], references: [id])
+  lecturerId     BigInt       @map("lecturer_id")
+  lecturer       Lecturer     @relation(fields: [lecturerId], references: [id])
+  academicYearId BigInt       @map("academic_year_id")
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   name           String // "Kelas A", "Kelas B"
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Kelas ini punya...
   students    ClassStudent[] // ...daftar mahasiswa
-  materials   Material[]     // ...daftar materi
-  assignments Assignment[]   // ...daftar tugas
+  materials   Material[] // ...daftar materi
+  assignments Assignment[] // ...daftar tugas
 
   @@map("classes")
 }

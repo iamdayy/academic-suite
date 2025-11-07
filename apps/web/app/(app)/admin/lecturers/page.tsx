@@ -16,13 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -57,7 +50,6 @@ export default function LecturersPage() {
 
   const [newName, setNewName] = useState("");
   const [newNidn, setNewNidn] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
 
   const fetchData = async () => {
     try {
@@ -87,7 +79,7 @@ export default function LecturersPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedUserId || !newName || !newNidn) {
+    if (!newName || !newNidn) {
       toast.error("Semua field harus diisi.");
       return;
     }
@@ -97,14 +89,12 @@ export default function LecturersPage() {
       await api.post("/lecturers", {
         name: newName,
         nidn: newNidn,
-        userId: Number(selectedUserId),
       });
       toast.success("Profil dosen berhasil ditambahkan.");
 
       setIsDialogOpen(false);
       setNewName("");
       setNewNidn("");
-      setSelectedUserId("");
       fetchData(); // Refresh data
     } catch (error: any) {
       console.error("Gagal menambah dosen:", error);
@@ -148,32 +138,11 @@ export default function LecturersPage() {
               <DialogHeader>
                 <DialogTitle>Buat Profil Dosen Baru</DialogTitle>
                 <DialogDescription>
-                  Hubungkan Akun User (Lecturer) dengan profil dosen.
+                  Dosen dapat mendaftar (aktivasi akun) menggunakan NIDN setelah
+                  profil ini dibuat.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="user">Akun User (Lecturer)</Label>
-                  <Select
-                    value={selectedUserId}
-                    onValueChange={setSelectedUserId}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Akun User..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem
-                          key={user.id.toString()}
-                          value={user.id.toString()}
-                        >
-                          {user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">Nama Lengkap Dosen</Label>
                   <Input

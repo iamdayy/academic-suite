@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Request,
   Response,
@@ -12,9 +13,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import express from 'express';
 import * as sharedTypes from 'shared-types';
+import { RegisterLecturerDto } from 'src/lecturers/dto/register-lecturer.dto';
 import { JwtAuthGuard } from '../users/users.controller';
 import { AuthService } from './auth.service';
 import { GetUser } from './decorators/user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterStudentDto } from './dto/register-student.dto';
 
 // 1. Buat Guard kustom (opsional tapi rapi)
@@ -43,6 +46,14 @@ export class AuthController {
   registerStudent(@Body() registrationStudentDto: RegisterStudentDto) {
     return this.authService.registerStudent(registrationStudentDto);
   }
+  @Post('register/lecturer')
+  registerLecturer(@Body() registrationLecturerDto: RegisterLecturerDto) {
+    return this.authService.registerLecturer(registrationLecturerDto);
+  }
+
+  /**
+   * Endpoint: GET /auth/me
+   */
 
   @UseGuards(JwtAuthGuard) // 5. Amankan dengan Guard!
   @Get('me')
@@ -61,5 +72,18 @@ export class AuthController {
       sameSite: 'none',
     });
     return { message: 'Logout successful' };
+  }
+
+  /**
+   * [BARU] [UNTUK SEMUA ROLE LOGIN]
+   * Ganti password (PATCH /auth/change-password)
+   */
+  @UseGuards(JwtAuthGuard) // Amankan, harus login
+  @Patch('change-password')
+  changePassword(
+    @GetUser() user: sharedTypes.AuthenticatedUser,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(user, changePasswordDto);
   }
 }

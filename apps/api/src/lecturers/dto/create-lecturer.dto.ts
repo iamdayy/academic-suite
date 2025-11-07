@@ -1,5 +1,5 @@
 // 📁 apps/api/src/lecturers/dto/create-lecturer.dto.ts
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateLecturerDto {
   @IsString()
@@ -9,8 +9,4 @@ export class CreateLecturerDto {
   @IsString()
   @IsNotEmpty()
   name: string; // "Dr. Budi Santoso"
-
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number; // 🔗 Foreign key ke tabel User
 }

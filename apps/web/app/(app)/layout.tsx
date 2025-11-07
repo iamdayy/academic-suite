@@ -21,6 +21,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  User,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -181,6 +182,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       </p>
                     </div>
                   </DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil & Password</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
