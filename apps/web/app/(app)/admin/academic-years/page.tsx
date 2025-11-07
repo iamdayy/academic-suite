@@ -116,7 +116,7 @@ export default function AcademicYearsPage() {
   };
 
   return (
-    <div>
+    <main>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manajemen Tahun Ajaran</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -236,6 +236,6 @@ export default function AcademicYearsPage() {
           </TableBody>
         </Table>
       )}
-    </div>
+    </main>
   );
 }

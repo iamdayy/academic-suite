@@ -178,4 +178,37 @@ export class StatsService {
       pendingSubmissions: pendingSubmissions,
     };
   }
+
+  /**
+   * [BARU] [UNTUK WALI]
+   * Mengambil statistik ringkasan untuk dashboard Wali.
+   */
+  async getGuardianStats(user: AuthenticatedUser) {
+    // 1. Pastikan user adalah Wali
+    if (!user.guardian) {
+      throw new UnauthorizedException('User is not a guardian');
+    }
+    const guardianId = user.guardian.id;
+
+    // 2. Dapatkan ID mahasiswa yang terhubung
+    const connections = await this.prisma.guardianStudent.findMany({
+      where: { guardianId },
+      select: { studentId: true },
+    });
+    const studentIds = connections.map((c) => c.studentId);
+
+    // 3. Hitung total SKS yang sedang diambil (KRS Draft) oleh semua anak
+    const takingCredits = await this.prisma.krsDetail.count({
+      where: {
+        krsHeader: {
+          studentId: { in: studentIds },
+          status: 'DRAFT',
+        },
+      },
+    });
+    return {
+      totalStudents: studentIds.length,
+      takingCredits: takingCredits, // Jumlah Matkul di KRS Draft
+    };
+  }
 }

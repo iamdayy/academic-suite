@@ -42,4 +42,15 @@ export class StatsController {
   getLecturerStats(@GetUser() user: sharedTypes.AuthenticatedUser) {
     return this.statsService.getLecturerStats(user);
   }
+
+  /**
+   * [BARU] [UNTUK WALI]
+   * GET /stats/guardian/me
+   */
+  @Get('guardian/me')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(sharedTypes.Role.GUARDIAN) // Hanya Wali
+  getGuardianStats(@GetUser() user: sharedTypes.AuthenticatedUser) {
+    return this.statsService.getGuardianStats(user);
+  }
 }

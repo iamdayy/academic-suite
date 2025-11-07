@@ -3,6 +3,14 @@
 
 import { AssignmentFormDialog } from "@/components/AssignmentFormDialog";
 import { MaterialFormDialog } from "@/components/MaterialFormDialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -131,7 +139,20 @@ export default function ManageClassPage() {
   }
 
   return (
-    <div>
+    <main>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/lecturer/classes">Kelas Saya</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Kelola: {classDetails.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <h1 className="text-3xl font-bold">Kelola Kelas: {classDetails.name}</h1>
       <p className="text-lg text-muted-foreground mb-6">
         {classDetails.course.code} - {classDetails.course.name}
@@ -267,6 +288,6 @@ export default function ManageClassPage() {
           </Table>
         </TabsContent>
       </Tabs>
-    </div>
+    </main>
   );
 }

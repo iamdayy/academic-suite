@@ -1,42 +1,50 @@
 // 📁 apps/web/app/(app)/admin/academic-years/[yearId]/[classId]/page.tsx
 "use client";
 
-import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { ChevronLeft, Loader2, PlusCircle, Trash2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import api from "@/lib/api";
+import { Link, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 // import { ConnectStudentDialog } from '@/components/dialogs/ConnectStudentDialog'; // <-- Kita pakai ulang komponen ini!
 
@@ -85,7 +93,7 @@ export default function RosterPage() {
       const [classRes, rosterRes, studentsRes] = await Promise.all([
         api.get(`/classes/${classId}`),
         api.get(`/class-enrollment/roster/${classId}`),
-        api.get('/students'), // Untuk dropdown
+        api.get("/students"), // Untuk dropdown
       ]);
       setCls(classRes.data);
       setRoster(rosterRes.data);
@@ -108,7 +116,7 @@ export default function RosterPage() {
     if (!selectedStudentId) return;
     setIsSubmitting(true);
     try {
-      await api.post('/class-enrollment/enroll', {
+      await api.post("/class-enrollment/enroll", {
         studentId: Number(selectedStudentId),
         classId: Number(classId),
       });
@@ -116,7 +124,6 @@ export default function RosterPage() {
       setIsDialogOpen(false);
       setSelectedStudentId("");
       fetchData(); // Refresh tabel
-
     } catch (error: any) {
       console.error("Gagal menambah:", error);
       toast.error("Terjadi kesalahan saat menambah mahasiswa.");
@@ -139,16 +146,37 @@ export default function RosterPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center mt-10"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    return (
+      <div className="flex justify-center mt-10">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
   if (!cls) return <p>Kelas tidak ditemukan.</p>;
 
   return (
-    <div>
-      <Button variant="outline" size="sm" onClick={() => router.push(`/admin/academic-years/${yearId}`)} className="mb-4">
-        <ChevronLeft className="h-4 w-4 mr-2" />
-        Kembali ke Daftar Kelas
-      </Button>
+    <main>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/academic-years">Tahun Ajaran</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href={`/admin/academic-years/${yearId}`}>Kelola Kelas</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Kelola Roster</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      {/* Card Detail Kelas (Induk) */}
 
       <Card className="mb-6">
         <CardHeader>
@@ -160,7 +188,9 @@ export default function RosterPage() {
       </Card>
 
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Daftar Mahasiswa ({roster.length})</h2>
+        <h2 className="text-2xl font-bold">
+          Daftar Mahasiswa ({roster.length})
+        </h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -174,26 +204,39 @@ export default function RosterPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <Label htmlFor="student">Pilih Mahasiswa</Label>
-                <Select value={selectedStudentId} onValueChange={setSelectedStudentId} required>
+                <Select
+                  value={selectedStudentId}
+                  onValueChange={setSelectedStudentId}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Mahasiswa..." />
                   </SelectTrigger>
                   <SelectContent>
                     {allStudents
                       // Filter mahasiswa yang BELUM ada di roster
-                      .filter(s => !roster.some(r => r.student.id === s.id))
+                      .filter((s) => !roster.some((r) => r.student.id === s.id))
                       .map((student) => (
-                      <SelectItem key={student.id.toString()} value={student.id.toString()}>
-                        {student.name} ({student.nim})
-                      </SelectItem>
-                    ))}
+                        <SelectItem
+                          key={student.id.toString()}
+                          value={student.id.toString()}
+                        >
+                          {student.name} ({student.nim})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
               <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="secondary">Batal</Button></DialogClose>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Batal
+                  </Button>
+                </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Tambahkan
                 </Button>
               </DialogFooter>
@@ -214,10 +257,12 @@ export default function RosterPage() {
           {roster.map((entry) => (
             <TableRow key={entry.id.toString()}>
               <TableCell>{entry.student.nim}</TableCell>
-              <TableCell className="font-medium">{entry.student.name}</TableCell>
+              <TableCell className="font-medium">
+                {entry.student.name}
+              </TableCell>
               <TableCell>
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   size="sm"
                   onClick={() => handleDelete(entry.id)}
                 >
@@ -228,6 +273,6 @@ export default function RosterPage() {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </main>
   );
 }

@@ -2,6 +2,14 @@
 "use client";
 
 import { EditClassDialog } from "@/components/dialogs/EditClassDialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,7 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
-import { ChevronLeft, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
@@ -169,16 +177,20 @@ export default function AcademicYearDetailPage() {
   if (!year) return <p>Tahun Ajaran tidak ditemukan.</p>;
 
   return (
-    <div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => router.push("/admin/academic-years")}
-        className="mb-4"
-      >
-        <ChevronLeft className="h-4 w-4 mr-2" />
-        Kembali ke Daftar Tahun Ajaran
-      </Button>
+    <main>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/academic-years">Tahun Ajaran</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Kelola Kelas</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Card Detail Tahun Ajaran (Induk) */}
       <Card className="mb-6">
@@ -328,6 +340,6 @@ export default function AcademicYearDetailPage() {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </main>
   );
 }
