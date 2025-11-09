@@ -9,7 +9,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { AuthenticatedUser, Role } from 'shared-types';
-import { RegisterLecturerDto } from 'src/lecturers/dto/register-lecturer.dto';
+import { RegisterLecturerDto } from '../lecturers/dto/register-lecturer.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDto } from './dto/change-password.dto';

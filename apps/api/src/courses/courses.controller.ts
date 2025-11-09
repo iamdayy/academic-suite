@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
 import * as sharedTypes from 'shared-types'; // <-- 6. Impor
-import { GetUser } from 'src/auth/decorators/user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator'; // <-- 5. Impor
+import { GetUser } from '../auth/decorators/user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard'; // <-- 4. Impor
 import { CoursesService } from './courses.service';
 import { AddPrerequisiteDto } from './dto/add-prerequisite.dto';
