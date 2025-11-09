@@ -13,6 +13,7 @@ import api from "@/lib/api";
 import {
   Book,
   BookOpenCheck,
+  ClipboardCheck,
   ClipboardList,
   Loader2,
   Star,
@@ -119,6 +120,11 @@ export default function StudentDashboard() {
               <Link href="/assignments">
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Tugas Saya
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/attendance">
+                <ClipboardCheck className="mr-2 h-4 w-4" /> Presensi Saya
               </Link>
             </Button>
           </div>

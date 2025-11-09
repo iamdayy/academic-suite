@@ -4,6 +4,10 @@
 import { AssignmentFormDialog } from "@/components/AssignmentFormDialog";
 import { MaterialFormDialog } from "@/components/MaterialFormDialog";
 import {
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from "@/components/ui/alert-dialog";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -12,6 +16,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -22,7 +33,16 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
-import { Loader2, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@radix-ui/react-alert-dialog";
+import { Clock, Loader2, PlayCircle, StopCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -47,6 +67,18 @@ interface Assignment {
 interface EnrolledStudent {
   student: { id: bigint; name: string; nim: string; user: { email: string } };
 }
+interface Schedule {
+  id: bigint;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+}
+interface ActiveSession {
+  id: bigint;
+  classScheduleId: bigint;
+  status: string;
+}
 
 export default function ManageClassPage() {
   const params = useParams();
@@ -57,23 +89,37 @@ export default function ManageClassPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [roster, setRoster] = useState<EnrolledStudent[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchClassData = async () => {
     if (!classId) return;
     try {
       setIsLoading(true);
-      const [classRes, materialsRes, assignmentsRes, rosterRes] =
-        await Promise.all([
-          api.get(`/classes/${classId}`),
-          api.get(`/materials/class/${classId}`),
-          api.get(`/assignments/class/${classId}`),
-          api.get(`/class-enrollment/roster/${classId}`),
-        ]);
+      const [
+        classRes,
+        materialsRes,
+        assignmentsRes,
+        rosterRes,
+        schedulesRes,
+        activeSessionRes,
+      ] = await Promise.all([
+        api.get(`/classes/${classId}`),
+        api.get(`/materials/class/${classId}`),
+        api.get(`/assignments/class/${classId}`),
+        api.get(`/class-enrollment/roster/${classId}`),
+        api.get(`/class-schedules?classId=${classId}`),
+        api.get(`/attendance/session/active/${classId}`),
+      ]);
       setClassDetails(classRes.data);
       setMaterials(materialsRes.data);
       setAssignments(assignmentsRes.data);
       setRoster(rosterRes.data);
+      setSchedules(schedulesRes.data);
+      setActiveSession(activeSessionRes.data);
     } catch (error) {
       console.error("Gagal mengambil data kelas:", error);
     } finally {
@@ -116,6 +162,30 @@ export default function ManageClassPage() {
     } catch (error: any) {
       console.error("Gagal menghapus tugas:", error);
       toast.error("Gagal menghapus tugas.");
+    }
+  };
+
+  const handleOpenSession = async (classScheduleId: bigint) => {
+    try {
+      await api.post("/attendance/session/open", {
+        classScheduleId: Number(classScheduleId),
+        notes: `Sesi ${new Date().toLocaleDateString("id-ID")}`,
+      });
+      toast.success("Berhasil membuka sesi presensi!");
+      fetchClassData(); // Refresh data untuk menampilkan sesi aktif
+    } catch (error: any) {
+      toast.error("Gagal membuka sesi presensi.");
+    }
+  };
+
+  // 9. Buat fungsi Tutup Sesi
+  const handleCloseSession = async (sessionId: bigint) => {
+    try {
+      await api.patch(`/attendance/session/${sessionId}/close`, {});
+      toast.success("Berhasil menutup sesi presensi!");
+      fetchClassData(); // Refresh data untuk menghapus sesi aktif
+    } catch (error: any) {
+      toast.error("Gagal menutup sesi presensi.");
     }
   };
 
@@ -170,6 +240,7 @@ export default function ManageClassPage() {
           <TabsTrigger value="students">
             Mahasiswa ({roster.length})
           </TabsTrigger>
+          <TabsTrigger value="attendance">Presensi</TabsTrigger>
         </TabsList>
 
         {/* Tab Materi */}
@@ -286,6 +357,120 @@ export default function ManageClassPage() {
               ))}
             </TableBody>
           </Table>
+        </TabsContent>
+        {/* Tab Presensi */}
+        <TabsContent value="attendance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manajemen Presensi</CardTitle>
+              <CardDescription>
+                Buka sesi presensi berdasarkan jadwal kelas. Sesi akan otomatis
+                tertutup setelah 15 menit, atau Anda bisa menutupnya manual.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activeSession && (
+                <Card className="mb-6 bg-blue-900 border-blue-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">
+                      Sesi Sedang Berlangsung!
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-blue-200 mb-4">
+                      Sesi presensi sedang DIBUKA. Mahasiswa dapat melakukan
+                      presensi sekarang.
+                    </p>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                          <StopCircle className="mr-2 h-4 w-4" /> Tutup Sesi
+                          Sekarang
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Tutup Sesi?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Apakah Anda yakin ingin menutup sesi presensi ini?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCloseSession(activeSession.id)}
+                          >
+                            Ya, Tutup Sesi
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardContent>
+                </Card>
+              )}
+
+              <h3 className="text-lg font-semibold mb-4">
+                Jadwal Kelas Terdaftar
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Hari</TableHead>
+                    <TableHead>Waktu</TableHead>
+                    <TableHead>Ruangan</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {schedules.map((sch) => (
+                    <TableRow key={sch.id.toString()}>
+                      <TableCell>{sch.dayOfWeek}</TableCell>
+                      <TableCell>
+                        {sch.startTime} - {sch.endTime}
+                      </TableCell>
+                      <TableCell>{sch.room}</TableCell>
+                      <TableCell className="text-right">
+                        {activeSession ? (
+                          <Button size="sm" disabled>
+                            <Clock className="mr-2 h-4 w-4" /> Sesi Lain Aktif
+                          </Button>
+                        ) : (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <PlayCircle className="mr-2 h-4 w-4" /> Buka
+                                Sesi
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Buka Sesi Presensi?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Anda akan membuka sesi untuk: <br />
+                                  {sch.dayOfWeek}, {sch.startTime}-{sch.endTime}{" "}
+                                  di {sch.room}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleOpenSession(sch.id)}
+                                >
+                                  Ya, Buka Sesi
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </main>

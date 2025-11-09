@@ -92,4 +92,32 @@ export class ClassEnrollmentService {
       where: { id: enrollmentId },
     });
   }
+  /**
+   * [UNTUK STUDENT]
+   * Mengambil semua kelas yang diikuti (enrolled) oleh mahasiswa yang login.
+   */
+  async getMyClasses(user: AuthenticatedUser) {
+    if (!user.student) {
+      throw new UnauthorizedException('User is not a student');
+    }
+    const studentId = user.student.id;
+
+    // 1. Cari semua pendaftaran (enrollment) mahasiswa
+    const enrollments = await this.prisma.classStudent.findMany({
+      where: { studentId: studentId },
+      include: {
+        // 2. Sertakan data kelas, matkul, dosen, dan jadwalnya
+        class: {
+          include: {
+            course: true,
+            lecturer: true,
+            classSchedules: true, // Sertakan jadwal
+          },
+        },
+      },
+    });
+
+    // 3. Kembalikan daftar kelas yang sudah di-format
+    return enrollments.map((en) => en.class);
+  }
 }

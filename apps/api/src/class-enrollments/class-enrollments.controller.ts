@@ -1,13 +1,13 @@
 // 📁 apps/api/src/class-enrollment/class-enrollment.controller.ts
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Post,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import * as sharedTypes from 'shared-types';
@@ -45,6 +45,16 @@ export class ClassEnrollmentController {
     @GetUser() user: sharedTypes.AuthenticatedUser,
   ) {
     return this.classEnrollmentService.getRosterByClass(classId, user);
+  }
+
+  /**
+   * [BARU] [UNTUK STUDENT]
+   * GET /class-enrollment/my-classes
+   */
+  @Get('my-classes')
+  @Roles(sharedTypes.Role.STUDENT)
+  getMyClasses(@GetUser() user: sharedTypes.AuthenticatedUser) {
+    return this.classEnrollmentService.getMyClasses(user);
   }
 
   /**

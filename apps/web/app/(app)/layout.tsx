@@ -19,6 +19,7 @@ import {
   BookUser,
   CalendarDays,
   CheckCheck,
+  ClipboardCheck,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -115,12 +116,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/dashboard",
       icon: LayoutDashboard,
     },
+    {
+      name: "Kelas Saya",
+      href: "/lecturer/classes",
+      icon: BookCopy,
+    },
   ];
   const studentRoutes: IRoute[] = [
     {
       name: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Kartu Rencana Studi (KRS)",
+      href: "/krs",
+      icon: BookCopy,
+    },
+    {
+      name: "Tugas Saya",
+      href: "/assignments",
+      icon: ClipboardCheck,
+    },
+    {
+      name: "Presensi Saya",
+      href: "/attendance",
+      icon: CalendarDays,
     },
   ];
 

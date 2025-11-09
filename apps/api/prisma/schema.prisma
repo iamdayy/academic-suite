@@ -58,10 +58,11 @@ model Student {
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Student ini ada di...
-  guardians     GuardianStudent[] // ...daftar wali
-  krsHeaders    KrsHeader[] // ...daftar KRS
-  classStudents ClassStudent[] // ...daftar kelas yang diikuti
-  submissions   AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
+  guardians         GuardianStudent[] // ...daftar wali
+  krsHeaders        KrsHeader[] // ...daftar KRS
+  classStudents     ClassStudent[] // ...daftar kelas yang diikuti
+  submissions       AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
+  attendanceRecords AttendanceRecord[]
 
   @@map("students")
 }
@@ -254,12 +255,31 @@ model Class {
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Kelas ini punya...
-  students    ClassStudent[] // ...daftar mahasiswa
-  materials   Material[] // ...daftar materi
-  assignments Assignment[] // ...daftar tugas
-  krsDetails  KrsDetail[]
+  students       ClassStudent[] // ...daftar mahasiswa
+  materials      Material[] // ...daftar materi
+  assignments    Assignment[] // ...daftar tugas
+  krsDetails     KrsDetail[]
+  classSchedules ClassSchedule[]
 
   @@map("classes")
+}
+
+// Tabel jadwal mata kuliah
+model ClassSchedule {
+  id      BigInt @id @default(autoincrement())
+  classId BigInt @map("class_id")
+  class   Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  dayOfWeek String // Misal: "SENIN", "SELASA"
+  startTime String // Misal: "08:00" (kita simpan sebagai string agar mudah)
+  endTime   String // Misal: "10:30"
+  room      String // Misal: "Gedung A Ruang 101"
+
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  attendanceSessions AttendanceSession[]
+
+  @@map("class_schedules")
 }
 
 // Tabel Pivot (Many-to-Many) antara Class dan Student
@@ -320,4 +340,45 @@ model AssignmentSubmission {
 
   @@unique([assignmentId, studentId]) // Mahasiswa hanya bisa submit 1x per tugas
   @@map("assignment_submissions")
+}
+
+// Model baru untuk Sesi Presensi
+model AttendanceSession {
+  id              BigInt        @id @default(autoincrement())
+  classScheduleId BigInt        @map("class_schedule_id")
+  classSchedule   ClassSchedule @relation(fields: [classScheduleId], references: [id], onDelete: Cascade)
+
+  sessionDate DateTime @db.Date // Tanggal sesi ini diadakan
+  startTime   DateTime // Waktu Dosen membuka presensi
+  endTime     DateTime // Waktu Dosen menutup presensi
+  status      String // "OPEN", "CLOSED"
+  notes       String? // Misal: "Sesi ke-1: Pengenalan"
+
+  // Relasi ke rekaman presensi
+  records AttendanceRecord[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("attendance_sessions")
+}
+
+// Model baru untuk Rekaman Presensi (Mahasiswa)
+model AttendanceRecord {
+  id                  BigInt            @id @default(autoincrement())
+  attendanceSessionId BigInt            @map("attendance_session_id")
+  attendanceSession   AttendanceSession @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
+
+  studentId BigInt  @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  status     String // "HADIR", "IZIN", "SAKIT", "ALPA"
+  attendedAt DateTime @default(now()) // Waktu mahasiswa melakukan presensi
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Mahasiswa hanya bisa absen 1x per sesi
+  @@unique([attendanceSessionId, studentId])
+  @@map("attendance_records")
 }

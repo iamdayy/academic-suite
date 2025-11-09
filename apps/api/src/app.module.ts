@@ -23,6 +23,8 @@ import { GuardiansModule } from './guardians/guardians.module';
 import { PrerequisitesModule } from './prerequisites/prerequisites.module';
 import { GuardianViewModule } from './guardian-view/guardian-view.module';
 import { StatsModule } from './stats/stats.module';
+import { ClassSchedulesModule } from './class-schedules/class-schedules.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { StatsModule } from './stats/stats.module';
     PrerequisitesModule,
     GuardianViewModule,
     StatsModule,
+    ClassSchedulesModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

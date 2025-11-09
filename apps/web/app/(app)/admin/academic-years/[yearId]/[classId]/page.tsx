@@ -1,6 +1,7 @@
 // 📁 apps/web/app/(app)/admin/academic-years/[yearId]/[classId]/page.tsx
 "use client";
 
+import { ScheduleFormDialog } from "@/components/dialogs/ScheduleFormDialog";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { Link, Loader2, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -48,24 +50,35 @@ interface RosterEntry {
   student: Student;
 }
 
+interface Schedule {
+  id: bigint;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+}
+
 export default function RosterPage() {
   const params = useParams();
   const { yearId, classId } = params;
 
   const [cls, setCls] = useState<Class | null>(null);
   const [roster, setRoster] = useState<RosterEntry[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
     if (!classId) return;
     try {
       setIsLoading(true);
-      const [classRes, rosterRes] = await Promise.all([
+      const [classRes, rosterRes, schedulesRes] = await Promise.all([
         api.get(`/classes/${classId}`),
         api.get(`/class-enrollment/roster/${classId}`),
+        api.get(`/class-schedules?classId=${classId}`),
       ]);
       setCls(classRes.data);
       setRoster(rosterRes.data);
+      setSchedules(schedulesRes.data);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
       toast.error("Terjadi kesalahan saat mengambil data.");
@@ -88,6 +101,18 @@ export default function RosterPage() {
     } catch (error: any) {
       console.error("Gagal menghapus:", error);
       toast.error("Terjadi kesalahan saat menghapus mahasiswa.");
+    }
+  };
+
+  const handleDeleteSchedule = async (scheduleId: bigint) => {
+    if (!confirm("Yakin ingin menghapus jadwal ini?")) return;
+    try {
+      await api.delete(`/class-schedules/${scheduleId}`);
+      toast.success("Jadwal berhasil dihapus.");
+      fetchData(); // Refresh data
+    } catch (error: any) {
+      console.error("Gagal menghapus jadwal:", error);
+      toast.error("Terjadi kesalahan saat menghapus jadwal.");
     }
   };
 
@@ -133,45 +158,98 @@ export default function RosterPage() {
         </CardHeader>
       </Card>
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">
-          Daftar Mahasiswa ({roster.length})
-        </h2>
-      </div>
+      <Tabs defaultValue="roster" className="mt-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="roster">
+            Daftar Mahasiswa ({roster.length})
+          </TabsTrigger>
+          <TabsTrigger value="schedules">
+            Jadwal Kelas ({schedules.length})
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="roster">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
+              Daftar Mahasiswa ({roster.length})
+            </h2>
+          </div>
 
-      <p className="text-muted-foreground mb-4">
-        Daftar ini diisi secara otomatis ketika Anda menyetujui (APPROVE) KRS
-        mahasiswa.
-      </p>
+          <p className="text-muted-foreground mb-4">
+            Daftar ini diisi secara otomatis ketika Anda menyetujui (APPROVE)
+            KRS mahasiswa.
+          </p>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>NIM</TableHead>
-            <TableHead>Nama Mahasiswa</TableHead>
-            <TableHead>Aksi</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {roster.map((entry) => (
-            <TableRow key={entry.id.toString()}>
-              <TableCell>{entry.student.nim}</TableCell>
-              <TableCell className="font-medium">
-                {entry.student.name}
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(entry.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>NIM</TableHead>
+                <TableHead>Nama Mahasiswa</TableHead>
+                <TableHead>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {roster.map((entry) => (
+                <TableRow key={entry.id.toString()}>
+                  <TableCell>{entry.student.nim}</TableCell>
+                  <TableCell className="font-medium">
+                    {entry.student.name}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(entry.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TabsContent>
+        <TabsContent value="schedules">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Jadwal Kelas</h2>
+            <ScheduleFormDialog classId={cls.id} onSuccess={fetchData} />
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Hari</TableHead>
+                <TableHead>Jam Mulai</TableHead>
+                <TableHead>Jam Selesai</TableHead>
+                <TableHead>Ruangan</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {schedules.map((sch) => (
+                <TableRow key={sch.id.toString()}>
+                  <TableCell className="font-medium">{sch.dayOfWeek}</TableCell>
+                  <TableCell>{sch.startTime}</TableCell>
+                  <TableCell>{sch.endTime}</TableCell>
+                  <TableCell>{sch.room}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <ScheduleFormDialog
+                      classId={cls.id}
+                      schedule={sch}
+                      onSuccess={fetchData}
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteSchedule(sch.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }
