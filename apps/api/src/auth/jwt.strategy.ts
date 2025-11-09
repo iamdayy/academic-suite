@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // 2. Jangan abaikan jika token kedaluwarsa (expired)
       ignoreExpiration: false,
       // 3. Secret key untuk memverifikasi token (HARUS SAMA dengan di AuthModule)
-      secretOrKey: 'Iamdayy', // <-- TODO: Pindahkan ke .env!
+      secretOrKey: process.env.JWT_SECRET || 'Iamdayy', // <-- TODO: Pindahkan ke .env!
     });
   }
 

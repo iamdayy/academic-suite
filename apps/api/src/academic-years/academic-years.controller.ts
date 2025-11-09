@@ -21,38 +21,41 @@ import { UpdateAcademicYearDto } from './dto/update-academic-year.dto';
 
 // 7. Amankan SELURUH controller ini agar hanya bisa diakses oleh ADMIN
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('academic-years')
 export class AcademicYearsController {
   constructor(private readonly academicYearsService: AcademicYearsService) {}
 
+  // 2. Terapkan @Roles ke setiap metode SECARA INDIVIDUAL
   @Post()
+  @Roles(Role.ADMIN) // Hanya Admin
   create(@Body() createAcademicYearDto: CreateAcademicYearDto) {
     return this.academicYearsService.create(createAcademicYearDto);
   }
 
   @Get()
+  @Roles(Role.ADMIN, Role.STUDENT)
   findAll() {
     return this.academicYearsService.findAll();
   }
 
   @Get(':id')
+  @Roles(Role.ADMIN) // Hanya Admin
   findOne(@Param('id', ParseIntPipe) id: number) {
-    // <-- 8. Terapkan ParseIntPipe
     return this.academicYearsService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(Role.ADMIN) // Hanya Admin
   update(
-    @Param('id', ParseIntPipe) id: number, // <-- 8. Terapkan ParseIntPipe
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateAcademicYearDto: UpdateAcademicYearDto,
   ) {
     return this.academicYearsService.update(id, updateAcademicYearDto);
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN) // Hanya Admin
   remove(@Param('id', ParseIntPipe) id: number) {
-    // <-- 8. Terapkan ParseIntPipe
     return this.academicYearsService.remove(id);
   }
 }

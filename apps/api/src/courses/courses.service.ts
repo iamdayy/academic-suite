@@ -4,7 +4,9 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { AuthenticatedUser } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddPrerequisiteDto } from './dto/add-prerequisite.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -107,6 +109,48 @@ export class CoursesService {
       data: {
         courseId: course.id,
         prerequisiteCourseId: prerequisiteCourse.id,
+      },
+    });
+  }
+
+  /**
+   * [UNTUK MAHASISWA]
+   * Menampilkan semua mata kuliah yang tersedia di kurikulum aktif mahasiswa.
+   */
+  async findAvailableCourses(user: AuthenticatedUser) {
+    // 1. Pastikan user adalah Mahasiswa
+    if (!user.student) {
+      throw new UnauthorizedException('User is not a student');
+    }
+
+    // 2. Dapatkan studyProgramId dari profil mahasiswa
+    const studentProfile = await this.prisma.student.findUnique({
+      where: { id: user.student.id },
+      select: { studyProgramId: true },
+    });
+
+    if (!studentProfile) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    // 3. Cari kurikulum terbaru (aktif) untuk prodi tersebut
+    const activeCurriculum = await this.prisma.curriculum.findFirst({
+      where: { studyProgramId: studentProfile.studyProgramId },
+      orderBy: { year: 'desc' }, // Asumsi kurikulum tahun terbaru adalah yang aktif
+    });
+
+    if (!activeCurriculum) {
+      // Jika prodi ini belum punya kurikulum, kembalikan array kosong
+      return [];
+    }
+
+    // 4. Kembalikan semua mata kuliah dari kurikulum tersebut
+    return this.prisma.course.findMany({
+      where: {
+        curriculumId: activeCurriculum.id,
+      },
+      orderBy: {
+        semester: 'asc', // Urutkan berdasarkan semester
       },
     });
   }

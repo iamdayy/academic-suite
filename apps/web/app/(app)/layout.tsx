@@ -18,6 +18,7 @@ import {
   BookCopy,
   BookUser,
   CalendarDays,
+  CheckCheck,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -101,6 +102,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Manajemen Wali",
       href: "/admin/guardians",
       icon: Users,
+    },
+    {
+      name: "Persetujuan KRS",
+      href: "/admin/krs-approval",
+      icon: CheckCheck,
     },
   ];
   const lecturerRoutes: IRoute[] = [

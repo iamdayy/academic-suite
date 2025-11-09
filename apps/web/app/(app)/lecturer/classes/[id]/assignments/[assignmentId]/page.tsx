@@ -1,10 +1,10 @@
 // 📁 apps/web/app/(app)/lecturer/classes/[id]/assignments/[assignmentId]/page.tsx
 "use client";
 
-import ClientAuthGuard from '@/components/ClientAuthGuard';
-import { GradeSubmissionDialog } from '@/components/GradeSubmissionDialog';
+import ClientAuthGuard from "@/components/ClientAuthGuard";
+import { GradeSubmissionDialog } from "@/components/GradeSubmissionDialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -20,10 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import api from '@/lib/api';
-import { ChevronLeft, Download, Loader2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import api from "@/lib/api";
+import { ChevronLeft, Download, FileDown, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 
 // Definisikan tipe datanya
 interface AssignmentDetails {
@@ -53,13 +54,13 @@ export default function AssignmentSubmissionsPage() {
   const [assignment, setAssignment] = useState<AssignmentDetails | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-const fetchData = async () => {
+  const fetchData = async () => {
     if (!assignmentId) return;
     try {
       setIsLoading(true); // Set loading setiap kali fetch
       const [assignmentRes, submissionsRes] = await Promise.all([
         api.get(`/assignments/${assignmentId}`),
-        api.get(`/assignment-submissions/assignment/${assignmentId}`)
+        api.get(`/assignment-submissions/assignment/${assignmentId}`),
       ]);
       setAssignment(assignmentRes.data);
       setSubmissions(submissionsRes.data);
@@ -75,9 +76,39 @@ const fetchData = async () => {
   }, [assignmentId]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('id-ID', {
-      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    return new Date(dateString).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
+  };
+
+  const handleExport = () => {
+    if (!assignment || !submissions) return;
+
+    // A. Siapkan data untuk di-export
+    const dataToExport = submissions.map((sub) => {
+      return {
+        NIM: sub.student.nim,
+        "Nama Mahasiswa": sub.student.name,
+        "Waktu Kumpul": formatDate(sub.submittedAt),
+        Nilai: sub.grade ?? "Belum Dinilai",
+        "URL File": sub.fileUrl,
+      };
+    });
+
+    // B. Buat Worksheet (lembar kerja)
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+    // C. Buat Workbook (file)
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Daftar Nilai"); // Nama sheet
+
+    // D. Trigger download di browser
+    const fileName = `Nilai - ${assignment.title.replace(/ /g, "_")}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   if (isLoading) {
@@ -96,7 +127,12 @@ const fetchData = async () => {
     <ClientAuthGuard>
       <main>
         {/* Tombol Kembali */}
-        <Button variant="outline" size="sm" onClick={() => router.push(`/lecturer/classes/${classId}`)} className="mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push(`/lecturer/classes/${classId}`)}
+          className="mb-4"
+        >
           <ChevronLeft className="h-4 w-4 mr-2" />
           Kembali ke Detail Kelas
         </Button>
@@ -115,7 +151,19 @@ const fetchData = async () => {
         </Card>
 
         {/* Tabel Submissions */}
-        <h2 className="text-2xl font-bold mb-4">Daftar Pengumpulan</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">
+            Daftar Pengumpulan ({submissions.length})
+          </h2>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={submissions.length === 0}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Export ke Excel
+          </Button>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -135,7 +183,11 @@ const fetchData = async () => {
                 <TableCell>{formatDate(sub.submittedAt)}</TableCell>
                 <TableCell>
                   <Button variant="link" asChild className="p-0">
-                    <a href={sub.fileUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={sub.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Download className="h-4 w-4 mr-2" /> Unduh
                     </a>
                   </Button>
@@ -153,7 +205,7 @@ const fetchData = async () => {
                     studentName={sub.student.name}
                     currentGrade={sub.grade}
                     onSuccess={fetchData}
-                    />
+                  />
                 </TableCell>
               </TableRow>
             ))}

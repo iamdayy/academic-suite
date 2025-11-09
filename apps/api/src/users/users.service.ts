@@ -16,6 +16,7 @@ export class UsersService {
     role: {
       select: {
         roleName: true,
+        id: true,
       },
     },
     student: {

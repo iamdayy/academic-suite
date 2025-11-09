@@ -15,8 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { upload } from "@vercel/blob/client";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { toast } from "sonner"; // Impor hook toast
 
 // Terima ID tugas sebagai prop
@@ -26,31 +27,53 @@ interface SubmissionDialogProps {
   onSuccess: () => void;
 }
 
-export function SubmissionDialog({ assignmentId, assignmentTitle, onSuccess }: SubmissionDialogProps) {
-  const [fileUrl, setFileUrl] = useState("");
+export function SubmissionDialog({
+  assignmentId,
+  assignmentTitle,
+  onSuccess,
+}: SubmissionDialogProps) {
+  const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]!);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!file) {
+      toast.error("Pilih file terlebih dahulu.");
+      return;
+    }
     setIsLoading(true);
 
     try {
-      // Panggil API pengumpulan tugas
-      await api.post('/assignment-submissions', {
-        fileUrl: fileUrl,
+      // 2. ALUR UPLOAD BARU (Vercel Blob)
+
+      // A: Upload file langsung dari client ke Vercel Blob
+      // Ini akan memanggil '/api/upload' (Next.js route) kita di belakang layar
+      const newBlob = await upload(file.name, file, {
+        access: "public", // File bisa diakses publik
+        handleUploadUrl: "/api/upload", // Endpoint Next.js kita
+      });
+
+      // B: Simpan URL permanennya ke database kita via API NestJS
+      await api.post("/assignment-submissions", {
+        fileUrl: newBlob.url, // URL dari Vercel Blob
         assignmentId: Number(assignmentId),
       });
 
-      toast('Tugas berhasil dikumpulkan!');
+      toast.success("Berhasil mengumpulkan tugas!");
 
-      setIsOpen(false); // Tutup dialog jika berhasil
-      setFileUrl(""); // Kosongkan form
-      onSuccess(); // Panggil callback untuk refresh data!
-
+      setIsOpen(false);
+      setFile(null);
+      onSuccess();
     } catch (error: any) {
       console.error("Gagal mengumpulkan:", error);
-      toast('Gagal mengumpulkan tugas.')
+      toast.error("Gagal mengumpulkan tugas.");
     } finally {
       setIsLoading(false);
     }
@@ -80,10 +103,9 @@ export function SubmissionDialog({ assignmentId, assignmentTitle, onSuccess }: S
               </Label>
               <Input
                 id="fileUrl"
-                type="url"
+                type="file"
                 placeholder="https://..."
-                value={fileUrl}
-                onChange={(e) => setFileUrl(e.target.value)}
+                onChange={handleFileChange}
                 className="col-span-3"
                 required
               />

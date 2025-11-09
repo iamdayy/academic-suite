@@ -13,7 +13,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
-import { Role } from 'shared-types'; // <-- 6. Impor
+import * as sharedTypes from 'shared-types'; // <-- 6. Impor
+import { GetUser } from 'src/auth/decorators/user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator'; // <-- 5. Impor
 import { RolesGuard } from '../auth/guards/roles.guard'; // <-- 4. Impor
 import { CoursesService } from './courses.service';
@@ -23,30 +24,42 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 
 // 7. Amankan SELURUH controller ini agar hanya bisa diakses oleh ADMIN
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Post()
+  @Roles(sharedTypes.Role.ADMIN)
   create(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.create(createCourseDto);
   }
 
   @Get()
+  @Roles(sharedTypes.Role.ADMIN)
   findAll(@Query('curriculumId') curriculumId?: number) {
     return this.coursesService.findAll(
       curriculumId ? Number(curriculumId) : undefined,
     );
   }
 
+  /**
+   * GET /courses/available
+   */
+  @Get('available')
+  @Roles(sharedTypes.Role.STUDENT) // Hanya Mahasiswa
+  findAvailableCourses(@GetUser() user: sharedTypes.AuthenticatedUser) {
+    return this.coursesService.findAvailableCourses(user);
+  }
+
   @Get(':id')
+  @Roles(sharedTypes.Role.ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     // <-- 8. Terapkan ParseIntPipe
     return this.coursesService.findOne(Number(id));
   }
 
   @Patch(':id')
+  @Roles(sharedTypes.Role.ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number, // <-- 8. Terapkan ParseIntPipe
     @Body() updateCourseDto: UpdateCourseDto,
@@ -55,15 +68,17 @@ export class CoursesController {
   }
 
   @Delete(':id')
+  @Roles(sharedTypes.Role.ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
-    // <-- 8. Terapkan ParseIntPipe
     return this.coursesService.remove(id);
   }
   /**
-   * [BARU] [UNTUK ADMIN]
+   *
    * Tambah prasyarat (POST /courses/:id/prerequisite)
    */
+
   @Post(':id/prerequisite')
+  @Roles(sharedTypes.Role.ADMIN)
   addPrerequisite(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddPrerequisiteDto,
