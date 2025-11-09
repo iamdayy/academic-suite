@@ -1,4 +1,4 @@
-// 📁 apps/web/components/AddCourseToKrsDialog.tsx
+// 📁 apps/web/components/AddClassToKrsDialog.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -26,72 +26,74 @@ import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Tipe data untuk dropdown
-interface AvailableCourse {
+interface AvailableClass {
   id: bigint;
-  code: string;
-  name: string;
-  semester: number;
+  name: string; // "Kelas A"
+  course: { code: string; name: string }; // "IF101 - Dasar Pemrograman"
 }
 
 // Definisikan props
-interface AddCourseToKrsDialogProps {
+interface AddClassToKrsDialogProps {
   krsHeaderId: bigint;
-  onSuccess: () => void; // Callback untuk refresh tabel
-  existingCourseIds: bigint[];
+  academicYearId: bigint; // Kita butuh ini untuk memfilter kelas
+  existingClassIds: bigint[]; // Untuk memfilter yang sudah diambil
+  onSuccess: () => void;
 }
 
-export function AddCourseToKrsDialog({
+export function AddClassToKrsDialog({
   krsHeaderId,
+  academicYearId,
+  existingClassIds,
   onSuccess,
-  existingCourseIds,
-}: AddCourseToKrsDialogProps) {
-  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>(
+}: AddClassToKrsDialogProps) {
+  const [availableClasses, setAvailableClasses] = useState<AvailableClass[]>(
     []
   );
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingCourses, setIsFetchingCourses] = useState(false);
+  const [isFetchingClasses, setIsFetchingClasses] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Ambil daftar mata kuliah saat dialog dibuka
+  // Ambil daftar kelas yang dibuka semester ini
   useEffect(() => {
     if (isOpen) {
-      setIsFetchingCourses(true);
+      setIsFetchingClasses(true);
+      // Panggil API GET /classes, difilter berdasarkan T.A.
       api
-        .get("/courses/available")
-        .then((res) => setAvailableCourses(res.data))
+        .get(`/classes?academicYearId=${academicYearId}`)
+        .then((res) => setAvailableClasses(res.data))
         .catch((err) => {
-          console.error("Gagal fetch mata kuliah:", err);
-          toast.error("Terjadi kesalahan saat mengambil data mata kuliah.");
+          console.error("Gagal fetch kelas:", err);
+          toast.error("Terjadi kesalahan saat mengambil data kelas.");
         })
-        .finally(() => setIsFetchingCourses(false));
+        .finally(() => setIsFetchingClasses(false));
     }
-  }, [isOpen, toast]);
+  }, [isOpen, academicYearId, toast]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedCourseId) {
-      toast.error("Pilih mata kuliah terlebih dahulu.");
+    if (!selectedClassId) {
+      toast.error("Pilih kelas terlebih dahulu.");
       return;
     }
     setIsLoading(true);
 
     try {
-      // Panggil API POST /krs-details
+      // Panggil API POST /krs-details dengan classId
       await api.post("/krs-details", {
         krsHeaderId: Number(krsHeaderId),
-        courseId: Number(selectedCourseId),
+        classId: Number(selectedClassId), // Kirim classId
       });
 
-      toast.success("Berhasil menambah mata kuliah!");
+      toast.success("Berhasil menambah kelas!");
 
-      setIsOpen(false); // Tutup dialog
-      setSelectedCourseId(""); // Reset form
-      onSuccess(); // Panggil callback refresh
+      setIsOpen(false);
+      setSelectedClassId("");
+      onSuccess(); // Refresh tabel
     } catch (error: any) {
-      console.error("Gagal menambah mata kuliah:", error);
-      toast.error("Terjadi kesalahan saat menambah mata kuliah.");
+      console.error("Gagal menambah kelas:", error);
+      toast.error("Terjadi kesalahan saat menambah kelas.");
     } finally {
       setIsLoading(false);
     }
@@ -101,42 +103,42 @@ export function AddCourseToKrsDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="mb-4">
-          <PlusCircle className="mr-2 h-4 w-4" /> Tambah Mata Kuliah
+          <PlusCircle className="mr-2 h-4 w-4" /> Tambah Kelas
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Tambah Mata Kuliah</DialogTitle>
+            <DialogTitle>Tambah Kelas</DialogTitle>
             <DialogDescription>
-              Pilih mata kuliah dari kurikulum Anda.
+              Pilih kelas yang akan diambil semester ini.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="course">Mata Kuliah</Label>
+              <Label htmlFor="class">Kelas yang Tersedia</Label>
               <Select
-                value={selectedCourseId}
-                onValueChange={setSelectedCourseId}
+                value={selectedClassId}
+                onValueChange={setSelectedClassId}
                 required
               >
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
-                      isFetchingCourses ? "Memuat..." : "Pilih Mata Kuliah..."
+                      isFetchingClasses ? "Memuat..." : "Pilih Kelas..."
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCourses
-                    .filter((course) => !existingCourseIds.includes(course.id))
-                    .map((course) => (
+                  {availableClasses
+                    .filter((cls) => !existingClassIds.includes(cls.id)) // Filter yang sudah ada
+                    .map((cls) => (
                       <SelectItem
-                        key={course.id.toString()}
-                        value={course.id.toString()}
+                        key={cls.id.toString()}
+                        value={cls.id.toString()}
                       >
-                        (Sem {course.semester}) {course.code} - {course.name}
+                        {cls.course.code} - {cls.course.name} ({cls.name})
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -150,7 +152,7 @@ export function AddCourseToKrsDialog({
                 Batal
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isLoading || isFetchingCourses}>
+            <Button type="submit" disabled={isLoading || isFetchingClasses}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Tambahkan
             </Button>

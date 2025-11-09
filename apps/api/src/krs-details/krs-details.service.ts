@@ -16,13 +16,13 @@ export class KrsDetailsService {
 
   /**
    * [UNTUK STUDENT]
-   * Menambahkan mata kuliah (course) ke KrsHeader.
+   * Menambahkan mata kuliah (class) ke KrsHeader.
    */
   async create(
     createKrsDetailDto: CreateKrsDetailDto,
     user: AuthenticatedUser,
   ) {
-    const { krsHeaderId, courseId } = createKrsDetailDto;
+    const { krsHeaderId, classId } = createKrsDetailDto;
 
     // 1. Dapatkan KrsHeader
     const krsHeader = await this.prisma.krsHeader.findUnique({
@@ -40,22 +40,26 @@ export class KrsDetailsService {
 
     // 3. (Opsional) Cek apakah mata kuliah sudah ada
     const existingDetail = await this.prisma.krsDetail.findFirst({
-      where: { krsHeaderId, courseId },
+      where: { krsHeaderId, classId },
     });
 
     if (existingDetail) {
-      throw new ConflictException('Course already added to this KRS');
+      throw new ConflictException('class already added to this KRS');
     }
 
     // 4. Buat KrsDetail
     return this.prisma.krsDetail.create({
       data: {
         krsHeaderId,
-        courseId,
+        classId,
       },
-      include: {
-        course: true, // Sertakan data mata kuliah yang baru ditambahkan
-      },
+      // include: {
+      //   class: {
+      //     include: {
+      //       course: true,
+      //     },
+      //   },
+      // },
     });
   }
 
@@ -84,7 +88,14 @@ export class KrsDetailsService {
       throw new UnauthorizedException('You do not own this resource');
     }
 
-    // 3. Hapus
+    // 3. Verifikasi Status DRAFT
+    if (krsDetail.krsHeader.status !== 'DRAFT') {
+      throw new ConflictException(
+        'KRS is not in DRAFT status. Cannot remove classes.',
+      );
+    }
+
+    // 4. Hapus
     return this.prisma.krsDetail.delete({
       where: { id },
     });

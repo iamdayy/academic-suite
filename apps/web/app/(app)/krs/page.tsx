@@ -52,8 +52,12 @@ export default function KrsHistoryPage() {
 
   // Helper untuk menghitung total SKS (nanti)
   const calculateTotalCredits = (details: any[]) => {
+    if (!details || details.length === 0) return 0;
     // Logika ini perlu disempurnakan saat 'course' menyertakan SKS
-    return details.reduce((acc, detail) => acc + detail.course.credits, 0);
+    return details.reduce(
+      (acc, detail) => acc + detail.class.course.credits,
+      0
+    );
   };
 
   // Helper untuk warna Badge

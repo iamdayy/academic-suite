@@ -81,7 +81,11 @@ export class GuardianViewService {
             krsDetails: {
               // Sertakan detail mata kuliah & nilai
               include: {
-                course: true,
+                class: {
+                  include: {
+                    course: true,
+                  },
+                },
               },
             },
           },

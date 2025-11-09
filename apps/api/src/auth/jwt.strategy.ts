@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // 2. Jangan abaikan jika token kedaluwarsa (expired)
       ignoreExpiration: false,
       // 3. Secret key untuk memverifikasi token (HARUS SAMA dengan di AuthModule)
-      secretOrKey: process.env.JWT_SECRET || 'Iamdayy', // <-- TODO: Pindahkan ke .env!
+      secretOrKey: process.env.JWT_SECRET || 'Iamdayy',
     });
   }
 
@@ -34,6 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * Payload adalah data yang kita masukkan saat login (id, email, roleId)
    */
   async validate(payload: { sub: number; email: string; roleId: number }) {
+    console.log('Validating JWT payload:', payload);
     // const user = await this.usersService.findOne(payload.sub); // <-- HAPUS INI
     const user = await this.usersService.findProfileById(payload.sub); // <-- GANTI DENGAN INI
 

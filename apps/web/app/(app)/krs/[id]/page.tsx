@@ -1,7 +1,7 @@
 // 📁 apps/web/app/(app)/krs/[id]/page.tsx
 "use client";
 
-import { AddCourseToKrsDialog } from "@/components/dialogs/AddCourseToKRSDialog";
+import { AddClassToKrsDialog } from "@/components/dialogs/AddClassToKRSDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,14 +29,24 @@ import { toast } from "sonner";
 // Definisikan tipe data (sama seperti di /guardian)
 interface KrsDetail {
   id: bigint;
-  course: { code: string; name: string; credits: number; id: bigint };
+  class: {
+    // Ini sekarang 'class'
+    id: bigint;
+    name: string; // "Kelas A"
+    course: {
+      // Mata kuliah ada di dalam 'class'
+      code: string;
+      name: string;
+      credits: number;
+    };
+  };
   grade: string | null;
 }
 interface KrsHeader {
   id: bigint;
   status: string;
   semester: number;
-  academicYear: { year: string; semester: string };
+  academicYear: { year: string; semester: string; id: bigint };
   krsDetails: KrsDetail[];
 }
 
@@ -48,10 +58,10 @@ const calculateIPS = (details: KrsDetail[]) => {
 
   details.forEach((detail) => {
     if (detail.grade && gradeMap[detail.grade] !== undefined) {
-      const sks = detail.course.credits;
+      const sks = detail.class.course.credits; // <-- Ambil SKS dari class.course
       if (sks) {
         totalSKS += sks;
-        totalBobot += (gradeMap[detail.grade] || 0) * sks;
+        totalBobot += gradeMap[detail.grade]! * sks;
       }
     }
   });
@@ -103,29 +113,22 @@ export default function KrsDetailPage() {
   }, [krsId, isAuthLoading, user, router]); // <-- Jalankan fetchData
 
   // 4. Buat fungsi Hapus
-  const handleDeleteDetail = async (
-    krsDetailId: bigint,
-    courseName: string
-  ) => {
-    if (
-      !confirm(
-        `Yakin ingin menghapus mata kuliah "${courseName}" dari KRS ini?`
-      )
-    )
+  const handleDeleteDetail = async (krsDetailId: bigint, className: string) => {
+    if (!confirm(`Yakin ingin menghapus kelas "${className}" dari KRS ini?`))
       return;
 
     try {
-      await api.delete(`/krs-details/${krsDetailId}`); // API ini sudah kita buat
-      toast.success("Berhasil menghapus mata kuliah dari KRS!");
+      await api.delete(`/krs-details/${krsDetailId}`);
+      toast.success(`Kelas "${className}" berhasil dihapus dari KRS.`);
       fetchData(); // Refresh tabel
     } catch (error: any) {
-      console.error("Gagal menghapus:", error);
-      toast.error("Terjadi kesalahan saat menghapus mata kuliah dari KRS.");
+      toast.error("Gagal menghapus kelas dari KRS.");
+      console.error(error);
     }
   };
 
-  const existingCourseIds =
-    krs?.krsDetails.map((detail) => detail.course.id) || [];
+  const existingClassIds =
+    krs?.krsDetails.map((detail) => detail.class.id) || [];
 
   if (isLoading || isAuthLoading) {
     return (
@@ -179,10 +182,11 @@ export default function KrsDetailPage() {
         <h2 className="text-2xl font-bold">Daftar Mata Kuliah</h2>
         {/* 5. Tambahkan Dialog (hanya jika status DRAFT) */}
         {krs.status === "DRAFT" && (
-          <AddCourseToKrsDialog
+          <AddClassToKrsDialog
             krsHeaderId={krs.id}
+            academicYearId={krs.academicYear.id}
+            existingClassIds={existingClassIds}
             onSuccess={fetchData}
-            existingCourseIds={existingCourseIds}
           />
         )}
       </div>
@@ -198,10 +202,10 @@ export default function KrsDetailPage() {
         </TableHeader>
         <TableBody>
           {krs.krsDetails.map((detail, index) => (
-            <TableRow key={`${detail.course.code}-${index}`}>
-              <TableCell>{detail.course.code}</TableCell>
-              <TableCell>{detail.course.name}</TableCell>
-              <TableCell>{detail.course.credits}</TableCell>
+            <TableRow key={`${detail.class.course.code}-${index}`}>
+              <TableCell>{detail.class.course.code}</TableCell>
+              <TableCell>{detail.class.course.name}</TableCell>
+              <TableCell>{detail.class.course.credits}</TableCell>
               <TableCell>
                 <Badge variant={detail.grade ? "default" : "outline"}>
                   {detail.grade || "Belum Keluar"}
@@ -213,7 +217,7 @@ export default function KrsDetailPage() {
                     variant="destructive"
                     size="sm"
                     onClick={() =>
-                      handleDeleteDetail(detail.id, detail.course.name)
+                      handleDeleteDetail(detail.id, detail.class.course.name)
                     }
                   >
                     <Trash2 className="h-4 w-4" />

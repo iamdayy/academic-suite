@@ -18,7 +18,7 @@ import { LocalStrategy } from './local.strategy';
 
     // 3. Konfigurasi JWT Module
     JwtModule.register({
-      secret: 'Iamdayy', // <-- TODO: Pindahkan ke .env!
+      secret: process.env.JWT_SECRET || 'Iamdayy', // <-- TODO: Pindahkan ke .env!
       signOptions: { expiresIn: '1d' }, // Token berlaku selama 1 hari
     }),
   ],

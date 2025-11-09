@@ -17,23 +17,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -42,9 +25,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
-import { Link, Loader2, PlusCircle, Trash2 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { Link, Loader2, Trash2 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 // import { ConnectStudentDialog } from '@/components/dialogs/ConnectStudentDialog'; // <-- Kita pakai ulang komponen ini!
 
@@ -65,39 +48,24 @@ interface RosterEntry {
   student: Student;
 }
 
-// Tipe untuk dropdown 'Tambah Mahasiswa'
-interface AllStudents {
-  id: bigint;
-  name: string;
-  nim: string;
-}
-
 export default function RosterPage() {
   const params = useParams();
-  const router = useRouter();
   const { yearId, classId } = params;
 
   const [cls, setCls] = useState<Class | null>(null);
   const [roster, setRoster] = useState<RosterEntry[]>([]);
-  const [allStudents, setAllStudents] = useState<AllStudents[]>([]); // Untuk dropdown
   const [isLoading, setIsLoading] = useState(true);
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState("");
 
   const fetchData = async () => {
     if (!classId) return;
     try {
       setIsLoading(true);
-      const [classRes, rosterRes, studentsRes] = await Promise.all([
+      const [classRes, rosterRes] = await Promise.all([
         api.get(`/classes/${classId}`),
         api.get(`/class-enrollment/roster/${classId}`),
-        api.get("/students"), // Untuk dropdown
       ]);
       setCls(classRes.data);
       setRoster(rosterRes.data);
-      setAllStudents(studentsRes.data);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
       toast.error("Terjadi kesalahan saat mengambil data.");
@@ -109,28 +77,6 @@ export default function RosterPage() {
   useEffect(() => {
     fetchData();
   }, [classId]);
-
-  // Handle Submit (Tambah Mahasiswa ke Roster)
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!selectedStudentId) return;
-    setIsSubmitting(true);
-    try {
-      await api.post("/class-enrollment/enroll", {
-        studentId: Number(selectedStudentId),
-        classId: Number(classId),
-      });
-      toast.success("Mahasiswa berhasil ditambahkan.");
-      setIsDialogOpen(false);
-      setSelectedStudentId("");
-      fetchData(); // Refresh tabel
-    } catch (error: any) {
-      console.error("Gagal menambah:", error);
-      toast.error("Terjadi kesalahan saat menambah mahasiswa.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // Handle Hapus (Keluarkan Mahasiswa dari Roster)
   const handleDelete = async (enrollmentId: bigint) => {
@@ -191,59 +137,12 @@ export default function RosterPage() {
         <h2 className="text-2xl font-bold">
           Daftar Mahasiswa ({roster.length})
         </h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Tambah Mahasiswa
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>Tambah Mahasiswa ke Roster</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Label htmlFor="student">Pilih Mahasiswa</Label>
-                <Select
-                  value={selectedStudentId}
-                  onValueChange={setSelectedStudentId}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Mahasiswa..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allStudents
-                      // Filter mahasiswa yang BELUM ada di roster
-                      .filter((s) => !roster.some((r) => r.student.id === s.id))
-                      .map((student) => (
-                        <SelectItem
-                          key={student.id.toString()}
-                          value={student.id.toString()}
-                        >
-                          {student.name} ({student.nim})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary">
-                    Batal
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Tambahkan
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      <p className="text-muted-foreground mb-4">
+        Daftar ini diisi secara otomatis ketika Anda menyetujui (APPROVE) KRS
+        mahasiswa.
+      </p>
 
       <Table>
         <TableHeader>

@@ -8,5 +8,5 @@ export class CreateKrsDetailDto {
 
   @IsNumber()
   @IsNotEmpty()
-  courseId: number; // 🔗 Mata kuliah apa yang ditambahkan
+  classId: number; // 🔗 Mata kuliah apa yang ditambahkan
 }

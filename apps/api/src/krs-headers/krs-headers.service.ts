@@ -26,7 +26,11 @@ export class KrsHeadersService {
     krsDetails: {
       // Data mata kuliah yang diambil
       include: {
-        course: true,
+        class: {
+          include: {
+            course: true, // Data mata kuliah
+          },
+        },
       },
     },
   };
@@ -123,11 +127,59 @@ export class KrsHeadersService {
    * Mengubah status KRS (misal: APPROVED / REJECTED)
    */
   update(id: number, updateKrsHeaderDto: UpdateKrsHeaderDto) {
-    return this.prisma.krsHeader.update({
-      where: { id },
-      data: updateKrsHeaderDto,
-      include: this.krsHeaderInclude,
-    });
+    const { status } = updateKrsHeaderDto;
+
+    // Logika Otomatisasi Anda ada di sini!
+    if (status === 'APPROVED') {
+      // Kita gunakan transaksi
+      return this.prisma.$transaction(async (tx) => {
+        // 1. Update status KrsHeader
+        const updatedHeader = await tx.krsHeader.update({
+          where: { id },
+          data: { status },
+          include: this.krsHeaderInclude,
+        });
+
+        // 2. Dapatkan semua detail (ClassId) dari KRS ini
+        const krsDetails = await tx.krsDetail.findMany({
+          where: { krsHeaderId: id },
+          select: { classId: true },
+        });
+
+        // 3. Siapkan data untuk tabel ClassStudent (Roster)
+        const enrollmentData = krsDetails.map((detail) => ({
+          studentId: updatedHeader.studentId,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          classId: detail.classId,
+        }));
+
+        // 4. Hapus pendaftaran lama (jika ada, untuk mencegah duplikat)
+        await tx.classStudent.deleteMany({
+          where: {
+            studentId: updatedHeader.studentId,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            classId: { in: krsDetails.map((d) => d.classId) },
+          },
+        });
+
+        // 5. Masukkan data baru ke Roster
+        await tx.classStudent.createMany({
+          data: enrollmentData,
+          skipDuplicates: true, // Jaga-jaga
+        });
+
+        return updatedHeader;
+      });
+    } else {
+      // Jika status diubah kembali ke DRAFT atau REJECTED,
+      // kita mungkin juga harus menghapus mereka dari Roster.
+      // (Untuk saat ini, kita hanya update statusnya)
+      return this.prisma.krsHeader.update({
+        where: { id },
+        data: { status },
+        include: this.krsHeaderInclude,
+      });
+    }
   }
 
   /**

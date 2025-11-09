@@ -201,7 +201,7 @@ export default function LecturersPage() {
                 <TableCell>{lecturer.id.toString()}</TableCell>
                 <TableCell>{lecturer.nidn}</TableCell>
                 <TableCell className="font-medium">{lecturer.name}</TableCell>
-                <TableCell>{lecturer.user.email}</TableCell>
+                <TableCell>{lecturer.user?.email || "-"}</TableCell>
                 <TableCell>
                   <Button variant="outline" size="sm">
                     Edit

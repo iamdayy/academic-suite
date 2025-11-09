@@ -69,8 +69,12 @@ export class StatsService {
         },
       },
       include: {
-        course: {
-          select: { credits: true }, // Kita butuh SKS mata kuliah
+        class: {
+          include: {
+            course: {
+              select: { credits: true }, // Kita butuh SKS mata kuliah
+            },
+          },
         },
       },
     });
@@ -80,7 +84,8 @@ export class StatsService {
 
     approvedDetails.forEach((detail) => {
       const weight = gradeToWeight(detail.grade);
-      const sks = detail.course.credits;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const sks = detail.class.course.credits;
 
       if (weight !== null && sks) {
         totalSKS += sks;
@@ -96,7 +101,7 @@ export class StatsService {
       where: {
         krsHeader: {
           studentId: studentId,
-          status: 'DRAFT', // KRS yang masih DRAFT
+          status: 'DRAFT',
         },
       },
     });

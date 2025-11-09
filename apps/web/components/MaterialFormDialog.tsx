@@ -16,8 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
+import { upload } from "@vercel/blob/client";
 import { Edit, Loader2, PlusCircle } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { toast } from "sonner";
 
 // 1. Definisikan tipe data Materi
@@ -46,23 +47,41 @@ export function MaterialFormDialog({
   // 4. Isi form dengan data yang ada (jika mode edit)
   const [title, setTitle] = useState(material?.title || "");
   const [content, setContent] = useState(material?.content || "");
-  const [fileUrl, setFileUrl] = useState(material?.fileUrl || "");
+  const [file, setFile] = useState<File | null>(null);
+  const [existingFileUrl, setExistingFileUrl] = useState(
+    material?.fileUrl || ""
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]!);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const payload = {
-      title,
-      content,
-      fileUrl,
-      classId: Number(classId),
-    };
+    let fileUrl = existingFileUrl;
 
     try {
+      if (file) {
+        const newBlob = await upload(file.name, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        fileUrl = newBlob.url;
+      }
+      const payload = {
+        title,
+        content,
+        fileUrl,
+        classId: Number(classId),
+      };
+
       if (isEditMode) {
         // 5. Panggil API PATCH jika mode Edit
         await api.patch(`/materials/${material.id}`, payload);
@@ -85,11 +104,13 @@ export function MaterialFormDialog({
 
   // 7. Reset form saat dialog ditutup (jika mode Tambah)
   const handleOpenChange = (open: boolean) => {
-    if (!open && !isEditMode) {
-      setTitle("");
-      setContent("");
-      setFileUrl("");
+    if (!open) {
+      setTitle(material?.title || "");
+      setContent(material?.content || "");
+      setFile(null);
+      setExistingFileUrl(material?.fileUrl || "");
     }
+
     setIsOpen(open);
   };
 
@@ -123,7 +144,6 @@ export function MaterialFormDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            {/* ... (Form Input tidak berubah) ... */}
             <div className="space-y-2">
               <Label htmlFor="title">Judul</Label>
               <Input
@@ -142,13 +162,27 @@ export function MaterialFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fileUrl">URL File (Opsional)</Label>
-              <Input
-                id="fileUrl"
-                type="url"
-                value={fileUrl ?? ""}
-                onChange={(e) => setFileUrl(e.target.value)}
-              />
+              <Label htmlFor="fileUpload">Upload File (Opsional)</Label>
+              <Input id="fileUpload" type="file" onChange={handleFileChange} />
+              {/* Tampilkan file yang sedang dipilih atau yang sudah ada */}
+              {file && (
+                <p className="text-sm text-muted-foreground">
+                  File baru: {file.name}
+                </p>
+              )}
+              {!file && existingFileUrl && (
+                <p className="text-sm text-muted-foreground">
+                  File saat ini:{" "}
+                  <a
+                    href={existingFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    Lihat
+                  </a>
+                </p>
+              )}
             </div>
           </div>
 

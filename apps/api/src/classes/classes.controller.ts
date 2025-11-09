@@ -1,16 +1,16 @@
 // 📁 apps/api/src/classes/classes.controller.ts
 
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Patch,
-    Post,
-    Query, // <-- 1. Impor
-    UseGuards, // <-- 2. Impor
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query, // <-- 1. Impor
+  UseGuards, // <-- 2. Impor
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport'; // <-- 3. Impor
 import * as sharedTypes from 'shared-types'; // <-- 6. Impor
@@ -34,6 +34,8 @@ export class ClassesController {
   }
 
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(sharedTypes.Role.ADMIN, sharedTypes.Role.STUDENT)
   findAll(
     @Query('curriculumId') curriculumId?: string,
     @Query('academicYearId') academicYearId?: string, // <-- Tambah query param baru

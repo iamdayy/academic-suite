@@ -170,7 +170,6 @@ model Course {
   // Relasi: Mata kuliah ini...
   prerequisites   Prerequisite[] @relation("coursePrerequisites") // ...memiliki prasyarat
   prerequisiteFor Prerequisite[] @relation("prerequisiteForCourse") // ...menjadi prasyarat
-  krsDetails      KrsDetail[] // ...ada di detail KRS
   classes         Class[] // ...memiliki banyak kelas
 
   @@map("courses")
@@ -228,8 +227,8 @@ model KrsDetail {
   id          BigInt    @id @default(autoincrement())
   krsHeaderId BigInt    @map("krs_header_id")
   krsHeader   KrsHeader @relation(fields: [krsHeaderId], references: [id])
-  courseId    BigInt    @map("course_id")
-  course      Course    @relation(fields: [courseId], references: [id])
+  classId     BigInt    @map("class_id")
+  class       Class     @relation(fields: [classId], references: [id])
   grade       String? // Nilai akhir (A, B, C...) bisa null
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -258,6 +257,7 @@ model Class {
   students    ClassStudent[] // ...daftar mahasiswa
   materials   Material[] // ...daftar materi
   assignments Assignment[] // ...daftar tugas
+  krsDetails  KrsDetail[]
 
   @@map("classes")
 }
