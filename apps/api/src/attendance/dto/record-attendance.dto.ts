@@ -8,6 +8,6 @@ export class RecordAttendanceDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['HADIR', 'IZIN', 'SAKIT']) // Mahasiswa hanya bisa set ini
+  @IsIn(['HADIR']) // Mahasiswa hanya bisa set ini
   status: string;
 }

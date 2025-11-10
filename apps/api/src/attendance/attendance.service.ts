@@ -9,6 +9,7 @@ import { AuthenticatedUser } from 'shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenSessionDto } from './dto/open-session.dto';
 import { RecordAttendanceDto } from './dto/record-attendance.dto';
+import { SetAttendanceDto } from './dto/set-attendance.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -159,6 +160,69 @@ export class AttendanceService {
         // Hanya kirim status, tidak perlu data lengkap
         status: true,
       },
+    });
+  }
+  /**
+   * [UNTUK DOSEN]
+   * Menetapkan/mengubah status presensi seorang mahasiswa secara manual.
+   */
+  async setStudentAttendance(dto: SetAttendanceDto, user: AuthenticatedUser) {
+    const { sessionId, studentId, status } = dto;
+
+    // 1. Dapatkan sesi dan verifikasi Dosen adalah pemiliknya
+    const session = await this.findSessionById(sessionId);
+    await this.verifyLecturerOwnership(Number(session.classScheduleId), user);
+
+    // 2. Verifikasi mahasiswa terdaftar di kelas ini
+    const classId = session.classSchedule.classId;
+    const enrollment = await this.prisma.classStudent.findFirst({
+      where: { classId, studentId },
+    });
+    if (!enrollment) {
+      throw new UnauthorizedException(
+        'Mahasiswa tidak terdaftar di kelas ini.',
+      );
+    }
+
+    // 3. Catat kehadiran (Upsert = update jika ada, create jika tidak ada)
+    return this.prisma.attendanceRecord.upsert({
+      where: {
+        attendanceSessionId_studentId: {
+          attendanceSessionId: sessionId,
+          studentId: studentId,
+        },
+      },
+      update: { status, attendedAt: new Date() }, // Dosen mengubah status
+      create: {
+        attendanceSessionId: sessionId,
+        studentId: studentId,
+        status: status, // Dosen membuat status baru (misal: 'ALPA')
+      },
+    });
+  }
+  /**
+   * [UNTUK DOSEN]
+   * Melihat semua sesi presensi (riwayat) untuk satu kelas.
+   */
+  async getSessionsByClass(classId: number, user: AuthenticatedUser) {
+    // Verifikasi Dosen adalah pemilik
+    // (Kita perlu mengambil classScheduleId dulu, ini agak rumit)
+    // (Cara cepat: verifikasi berdasarkan classId langsung)
+    if (!user.lecturer)
+      throw new UnauthorizedException('User is not a lecturer');
+    const classInfo = await this.prisma.class.findFirst({
+      where: { id: classId, lecturerId: user.lecturer.id },
+    });
+    if (!classInfo)
+      throw new UnauthorizedException('You do not own this class');
+
+    return this.prisma.attendanceSession.findMany({
+      where: {
+        classSchedule: {
+          classId: classId,
+        },
+      },
+      orderBy: { sessionDate: 'desc' },
     });
   }
 

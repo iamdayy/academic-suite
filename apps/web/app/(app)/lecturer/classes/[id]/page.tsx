@@ -7,6 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -74,6 +75,14 @@ interface Schedule {
   endTime: string;
   room: string;
 }
+interface AttendanceSession {
+  id: bigint;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  notes: string | null;
+}
 interface ActiveSession {
   id: bigint;
   classScheduleId: bigint;
@@ -90,6 +99,7 @@ export default function ManageClassPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [roster, setRoster] = useState<EnrolledStudent[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [sessions, setSessions] = useState<AttendanceSession[]>([]);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(
     null
   );
@@ -106,6 +116,7 @@ export default function ManageClassPage() {
         rosterRes,
         schedulesRes,
         activeSessionRes,
+        sessionsRes,
       ] = await Promise.all([
         api.get(`/classes/${classId}`),
         api.get(`/materials/class/${classId}`),
@@ -113,12 +124,14 @@ export default function ManageClassPage() {
         api.get(`/class-enrollment/roster/${classId}`),
         api.get(`/class-schedules?classId=${classId}`),
         api.get(`/attendance/session/active/${classId}`),
+        api.get(`/attendance/sessions/class/${classId}`),
       ]);
       setClassDetails(classRes.data);
       setMaterials(materialsRes.data);
       setAssignments(assignmentsRes.data);
       setRoster(rosterRes.data);
       setSchedules(schedulesRes.data);
+      setSessions(sessionsRes.data);
       setActiveSession(activeSessionRes.data);
     } catch (error) {
       console.error("Gagal mengambil data kelas:", error);
@@ -464,6 +477,55 @@ export default function ManageClassPage() {
                             </AlertDialogContent>
                           </AlertDialog>
                         )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <h3 className="text-lg font-semibold mb-4 mt-6">Riwayat Sesi</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Waktu</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Catatan</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.map((session) => (
+                    <TableRow key={session.id.toString()}>
+                      <TableCell>
+                        {new Date(session.sessionDate).toLocaleDateString(
+                          "id-ID"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(session.startTime).toLocaleTimeString(
+                          "id-ID"
+                        )}{" "}
+                        -{" "}
+                        {new Date(session.endTime).toLocaleTimeString("id-ID")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            session.status === "OPEN" ? "default" : "secondary"
+                          }
+                        >
+                          {session.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{session.notes}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link
+                            href={`/lecturer/classes/${classId}/attendance/${session.id}`}
+                          >
+                            Kelola Presensi
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

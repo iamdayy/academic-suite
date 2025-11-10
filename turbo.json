@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["DATABASE_POSTGRES_PRISMA_URL", "FRONTEND_URL", "JWT_SECRET"],
+      "env": ["DATABASE_POSTGRES_PRISMA_URL", "FRONTEND_URL", "JWT_SECRET", "DIRECT_POSTGRES_URL"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [
         ".next/**",

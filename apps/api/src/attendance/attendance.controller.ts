@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AttendanceService } from './attendance.service';
 import { OpenSessionDto } from './dto/open-session.dto';
 import { RecordAttendanceDto } from './dto/record-attendance.dto';
+import { SetAttendanceDto } from './dto/set-attendance.dto';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard) // Amankan seluruh controller
 @Controller('attendance')
@@ -95,5 +96,30 @@ export class AttendanceController {
     @GetUser() user: sharedTypes.AuthenticatedUser,
   ) {
     return this.attendanceService.getMyRecordForSession(sessionId, user);
+  }
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * Manual override presensi
+   * POST /attendance/record-manual
+   */
+  @Post('record-manual')
+  @Roles(sharedTypes.Role.LECTURER)
+  setStudentAttendance(
+    @Body() dto: SetAttendanceDto,
+    @GetUser() user: sharedTypes.AuthenticatedUser,
+  ) {
+    return this.attendanceService.setStudentAttendance(dto, user);
+  }
+  /**
+   * [BARU] [UNTUK DOSEN]
+   * GET /attendance/sessions/class/:classId
+   */
+  @Get('sessions/class/:classId')
+  @Roles(sharedTypes.Role.LECTURER)
+  getSessionsByClass(
+    @Param('classId', ParseIntPipe) classId: number,
+    @GetUser() user: sharedTypes.AuthenticatedUser,
+  ) {
+    return this.attendanceService.getSessionsByClass(classId, user);
   }
 }
