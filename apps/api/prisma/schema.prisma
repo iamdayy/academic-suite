@@ -64,6 +64,7 @@ model Student {
   classStudents     ClassStudent[] // ...daftar kelas yang diikuti
   submissions       AssignmentSubmission[] // ...daftar tugas yang dikumpulkan
   attendanceRecords AttendanceRecord[]
+  studentScores     StudentScore[]
 
   @@map("students")
 }
@@ -177,6 +178,43 @@ model Course {
   @@map("courses")
 }
 
+// Model baru untuk Bobot Penilaian (dibuat oleh Dosen)
+model GradingPolicy {
+  id      BigInt @id @default(autoincrement())
+  classId BigInt @unique @map("class_id") // Hanya 1 policy per Kelas
+  class   Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  // Persentase Bobot (contoh: 10, 20, 30, 40)
+  attendanceWeight Int @default(0) @map("attendance_weight")
+  assignmentWeight Int @default(0) @map("assignment_weight")
+  utsWeight        Int @default(0) @map("uts_weight")
+  uasWeight        Int @default(0) @map("uas_weight")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("grading_policies")
+}
+
+// Model baru untuk menyimpan skor manual (UTS/UAS)
+model StudentScore {
+  id        BigInt  @id @default(autoincrement())
+  studentId BigInt  @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   BigInt  @map("class_id")
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  // Nilai 0-100 yang di-input Dosen
+  scoreUTS Float? @map("score_uts")
+  scoreUAS Float? @map("score_uas")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([studentId, classId]) // Mahasiswa hanya punya 1 set nilai per kelas
+  @@map("student_scores")
+}
+
 // Tabel Prasyarat (Many-to-Many ke dirinya sendiri)
 model Prerequisite {
   id                   BigInt   @id @default(autoincrement())
@@ -256,11 +294,13 @@ model Class {
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Relasi: Kelas ini punya...
-  students       ClassStudent[] // ...daftar mahasiswa
-  materials      Material[] // ...daftar materi
-  assignments    Assignment[] // ...daftar tugas
-  krsDetails     KrsDetail[]
-  classSchedules ClassSchedule[]
+  students        ClassStudent[] // ...daftar mahasiswa
+  materials       Material[] // ...daftar materi
+  assignments     Assignment[] // ...daftar tugas
+  krsDetails      KrsDetail[]
+  classSchedules  ClassSchedule[]
+  studentScores   StudentScore[]
+  gradingPolicies GradingPolicy[]
 
   @@map("classes")
 }

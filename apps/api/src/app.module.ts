@@ -25,6 +25,7 @@ import { GuardianViewModule } from './guardian-view/guardian-view.module';
 import { StatsModule } from './stats/stats.module';
 import { ClassSchedulesModule } from './class-schedules/class-schedules.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { GradingModule } from './grading/grading.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     StatsModule,
     ClassSchedulesModule,
     AttendanceModule,
+    GradingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
