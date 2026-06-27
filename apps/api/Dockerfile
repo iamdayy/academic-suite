@@ -35,8 +35,9 @@ COPY --from=installer --chown=nestjs:nodejs /app/packages ./packages
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
+COPY --from=installer --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
 
 WORKDIR /app/apps/api
 EXPOSE 3001
 
-CMD ["node", "dist/src/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
