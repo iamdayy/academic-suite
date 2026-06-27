@@ -7,12 +7,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from 'shared-types';
 
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard('jwt') { }
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('counseling-logs')
 export class CounselingLogsController {
-  constructor(private readonly counselingLogsService: CounselingLogsService) {}
+  constructor(private readonly counselingLogsService: CounselingLogsService) { }
 
   @Roles(Role.STUDENT)
   @Post()
