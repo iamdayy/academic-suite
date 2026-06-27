@@ -133,6 +133,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/admin/edom",
       icon: ClipboardList,
     },
+    {
+      name: "Kelulusan & Alumni",
+      href: "/admin/alumni",
+      icon: GraduationCap,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
@@ -201,6 +206,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Transkrip Nilai",
       href: "/transcript",
       icon: FileText,
+    },
+    {
+      name: "Kelulusan & Alumni",
+      href: "/graduation",
+      icon: GraduationCap,
     },
   ];
 

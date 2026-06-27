@@ -34,6 +34,7 @@ import { ThesisDefensesModule } from './thesis-defenses/thesis-defenses.module';
 import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { EdomModule } from './edom/edom.module';
 import { ReportsModule } from './reports/reports.module';
+import { AlumniModule } from './alumni/alumni.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { ReportsModule } from './reports/reports.module';
     LeaveRequestsModule,
     EdomModule,
     ReportsModule,
+    AlumniModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -69,6 +69,9 @@ model Student {
   thesis            Thesis?
   leaveRequests     LeaveRequest[]
   edomSubmissions   EdomSubmission[]
+  yudisium          YudisiumRegistration?
+  wisuda            WisudaRegistration?
+  tracerStudy       TracerStudy?
 
   @@map("students")
 }
@@ -635,4 +638,60 @@ model EdomAnswer {
 
   @@unique([submissionId, questionId])
   @@map("edom_answers")
+}
+
+// ===========================================
+// BLOK 8: KELULUSAN & ALUMNI
+// ===========================================
+
+model YudisiumRegistration {
+  id           BigInt   @id @default(autoincrement())
+  studentId    BigInt   @unique @map("student_id")
+  student      Student  @relation(fields: [studentId], references: [id])
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  ipk          Float
+  totalCredits Int      @map("total_credits")
+  appliedAt    DateTime @default(now()) @map("applied_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("yudisium_registrations")
+}
+
+model WisudaEvent {
+  id         BigInt               @id @default(autoincrement())
+  batchName  String               // e.g. "Wisuda Angkatan 45"
+  eventDate  DateTime             @map("event_date")
+  isActive   Boolean              @default(true) @map("is_active")
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+  registrants WisudaRegistration[]
+
+  @@map("wisuda_events")
+}
+
+model WisudaRegistration {
+  id            BigInt      @id @default(autoincrement())
+  studentId     BigInt      @unique @map("student_id")
+  student       Student     @relation(fields: [studentId], references: [id])
+  wisudaEventId BigInt      @map("wisuda_event_id")
+  wisudaEvent   WisudaEvent @relation(fields: [wisudaEventId], references: [id])
+  status        String      @default("REGISTERED") // REGISTERED, ATTENDED
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("wisuda_registrations")
+}
+
+model TracerStudy {
+  id               BigInt   @id @default(autoincrement())
+  studentId        BigInt   @unique @map("student_id")
+  student          Student  @relation(fields: [studentId], references: [id])
+  employed         Boolean  // Bekerja atau belum
+  companyName      String?  @map("company_name")
+  salaryRange      String?  @map("salary_range") // e.g. "3M-5M", "5M-10M"
+  feedback         String?  @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("tracer_studies")
 }
