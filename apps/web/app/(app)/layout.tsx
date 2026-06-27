@@ -31,6 +31,7 @@ import {
   PauseCircle,
   ClipboardList,
   BookOpen,
+  Building,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -144,6 +145,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/admin/library",
       icon: BookOpen,
     },
+    {
+      name: "Fasilitas & Ruang",
+      href: "/admin/facilities",
+      icon: Building,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
@@ -157,9 +163,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       icon: BookCopy,
     },
     {
-      name: "Bimbingan Mahasiswa",
+      name: "Sidang Skripsi",
       href: "/lecturer/thesis",
-      icon: FileText,
+      icon: GraduationCap,
+    },
+    {
+      name: "Fasilitas & Ruang",
+      href: "/facilities",
+      icon: Building,
     },
   ];
   const studentRoutes: IRoute[] = [
@@ -222,6 +233,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Perpustakaan",
       href: "/library",
       icon: BookOpen,
+    },
+    {
+      name: "Fasilitas & Ruang",
+      href: "/facilities",
+      icon: Building,
     },
   ];
 

@@ -73,7 +73,8 @@ interface Schedule {
   dayOfWeek: string;
   startTime: string;
   endTime: string;
-  room: string;
+  facilityId: number;
+  facility?: { name: string };
 }
 interface AttendanceSession {
   id: bigint;
@@ -441,7 +442,7 @@ export default function ManageClassPage() {
                       <TableCell>
                         {sch.startTime} - {sch.endTime}
                       </TableCell>
-                      <TableCell>{sch.room}</TableCell>
+                      <TableCell>{sch.facility?.name || "-"}</TableCell>
                       <TableCell className="text-right">
                         {activeSession ? (
                           <Button size="sm" disabled>
@@ -463,7 +464,7 @@ export default function ManageClassPage() {
                                 <AlertDialogDescription>
                                   Anda akan membuka sesi untuk: <br />
                                   {sch.dayOfWeek}, {sch.startTime}-{sch.endTime}{" "}
-                                  di {sch.room}.
+                                  di {sch.facility?.name || "-"}.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

@@ -20,7 +20,6 @@ export class CreateClassScheduleDto {
   @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/) // Validasi format HH:MM
   endTime: string; // "10:30"
 
-  @IsString()
   @IsNotEmpty()
-  room: string; // "Gedung A Ruang 101"
+  facilityId: number;
 }

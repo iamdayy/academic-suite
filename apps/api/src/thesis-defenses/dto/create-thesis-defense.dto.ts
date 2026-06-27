@@ -10,8 +10,8 @@ export class CreateThesisDefenseDto {
   scheduledAt: string;
 
   @IsNotEmpty()
-  @IsString()
-  room: string;
+  @IsNumber()
+  facilityId: number;
   
   @IsOptional()
   @IsArray()

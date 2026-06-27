@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import api from "@/lib/api";
 import { Edit, Loader2, PlusCircle } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { toast } from "sonner";
 
 // Definisikan tipe data
@@ -31,7 +31,8 @@ interface Schedule {
   dayOfWeek: string;
   startTime: string;
   endTime: string;
-  room: string;
+  facilityId: number;
+  facility?: { name: string };
 }
 
 // Definisikan props
@@ -63,10 +64,17 @@ export function ScheduleFormDialog({
   const [dayOfWeek, setDayOfWeek] = useState(schedule?.dayOfWeek || "");
   const [startTime, setStartTime] = useState(schedule?.startTime || "");
   const [endTime, setEndTime] = useState(schedule?.endTime || "");
-  const [room, setRoom] = useState(schedule?.room || "");
+  const [facilityId, setFacilityId] = useState(schedule?.facilityId?.toString() || "");
+  const [facilities, setFacilities] = useState<any[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      api.get('/facilities').then(res => setFacilities(res.data)).catch(console.error);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -77,7 +85,7 @@ export function ScheduleFormDialog({
       dayOfWeek,
       startTime,
       endTime,
-      room,
+      facilityId: Number(facilityId),
     };
 
     // Hapus classId dari payload jika mode Edit
@@ -113,7 +121,7 @@ export function ScheduleFormDialog({
       setDayOfWeek("");
       setStartTime("");
       setEndTime("");
-      setRoom("");
+      setFacilityId("");
     }
     setIsOpen(open);
   };
@@ -180,14 +188,19 @@ export function ScheduleFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="room">Ruangan</Label>
-              <Input
-                id="room"
-                placeholder="Contoh: G-201"
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                required
-              />
+              <Label htmlFor="facility">Fasilitas / Ruangan</Label>
+              <Select value={facilityId} onValueChange={setFacilityId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Fasilitas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {facilities.map((fac) => (
+                    <SelectItem key={fac.id} value={fac.id.toString()}>
+                      {fac.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

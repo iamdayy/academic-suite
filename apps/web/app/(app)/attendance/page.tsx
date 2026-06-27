@@ -20,7 +20,8 @@ interface Schedule {
   dayOfWeek: string;
   startTime: string;
   endTime: string;
-  room: string;
+  facilityId: number;
+  facility?: { name: string };
 }
 interface MyClass {
   id: bigint;
@@ -94,7 +95,7 @@ export default function MyAttendancePage() {
                               {sch.startTime} - {sch.endTime}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {sch.room}
+                              {sch.facility?.name || "-"}
                             </p>
                           </div>
                           {/* Tombol Aksi "Cerdas" */}

@@ -36,6 +36,7 @@ import { EdomModule } from './edom/edom.module';
 import { ReportsModule } from './reports/reports.module';
 import { AlumniModule } from './alumni/alumni.module';
 import { LibraryModule } from './library/library.module';
+import { FacilitiesModule } from './facilities/facilities.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { LibraryModule } from './library/library.module';
     ReportsModule,
     AlumniModule,
     LibraryModule,
+    FacilitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

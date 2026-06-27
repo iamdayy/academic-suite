@@ -103,7 +103,7 @@ export class LibraryService {
 
       return tx.bookBorrowing.create({
         data: {
-          studentId: user.student.id as bigint,
+          studentId: user.student!.id as bigint,
           bookId,
           borrowDate,
           dueDate,

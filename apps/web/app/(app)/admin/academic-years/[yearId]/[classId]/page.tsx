@@ -55,7 +55,8 @@ interface Schedule {
   dayOfWeek: string;
   startTime: string;
   endTime: string;
-  room: string;
+  facilityId: number;
+  facility?: { name: string };
 }
 
 export default function RosterPage() {
@@ -229,7 +230,7 @@ export default function RosterPage() {
                   <TableCell className="font-medium">{sch.dayOfWeek}</TableCell>
                   <TableCell>{sch.startTime}</TableCell>
                   <TableCell>{sch.endTime}</TableCell>
-                  <TableCell>{sch.room}</TableCell>
+                  <TableCell>{sch.facility?.name || "-"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <ScheduleFormDialog
                       classId={cls.id}

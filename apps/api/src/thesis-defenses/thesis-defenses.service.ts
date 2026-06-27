@@ -12,7 +12,7 @@ export class ThesisDefensesService {
       data: {
         thesisId: createThesisDefenseDto.thesisId,
         scheduledAt: new Date(createThesisDefenseDto.scheduledAt),
-        room: createThesisDefenseDto.room,
+        facilityId: createThesisDefenseDto.facilityId,
         status: 'SCHEDULED',
         examiners: {
           create: createThesisDefenseDto.examinerIds?.map((id, index) => ({
@@ -37,7 +37,8 @@ export class ThesisDefensesService {
     return this.prisma.thesisDefense.findMany({
       include: {
         thesis: { include: { student: true } },
-        examiners: { include: { lecturer: true } }
+        examiners: { include: { lecturer: true } },
+        facility: true
       },
       orderBy: { scheduledAt: 'desc' }
     });
@@ -48,7 +49,8 @@ export class ThesisDefensesService {
       where: { id },
       include: {
         thesis: { include: { student: true } },
-        examiners: { include: { lecturer: true } }
+        examiners: { include: { lecturer: true } },
+        facility: true
       }
     });
   }

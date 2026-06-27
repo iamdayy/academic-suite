@@ -35,6 +35,7 @@ export class ClassSchedulesService {
   findAllByClass(classId: number) {
     return this.prisma.classSchedule.findMany({
       where: { classId },
+      include: { facility: true },
       orderBy: {
         startTime: 'asc', // Urutkan berdasarkan jam mulai
       },
