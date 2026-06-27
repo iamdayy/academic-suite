@@ -39,4 +39,4 @@ COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./apps/ap
 WORKDIR /app/apps/api
 EXPOSE 3001
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
