@@ -35,6 +35,7 @@ import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { EdomModule } from './edom/edom.module';
 import { ReportsModule } from './reports/reports.module';
 import { AlumniModule } from './alumni/alumni.module';
+import { LibraryModule } from './library/library.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { AlumniModule } from './alumni/alumni.module';
     EdomModule,
     ReportsModule,
     AlumniModule,
+    LibraryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
