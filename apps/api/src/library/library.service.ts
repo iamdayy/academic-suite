@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthenticatedUser } from 'shared-types';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LibraryService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService
+  ) { }
 
   // ============================
   // SETTINGS
@@ -95,7 +99,7 @@ export class LibraryService {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 7);
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.book.update({
         where: { id: bookId },
         data: { copiesAvailable: { decrement: 1 } }
@@ -111,6 +115,18 @@ export class LibraryService {
         }
       });
     });
+
+    if (user.id) {
+      await this.notificationsService.create({
+        userId: Number(user.id),
+        title: "Peminjaman Buku Berhasil",
+        message: `Anda berhasil meminjam buku. Harap kembalikan sebelum ${dueDate.toLocaleDateString('id-ID')}.`,
+        type: 'SUCCESS',
+        link: '/library'
+      });
+    }
+
+    return result;
   }
 
   async getMyBorrowings(user: AuthenticatedUser) {
@@ -153,7 +169,7 @@ export class LibraryService {
       fineAmount = diffDays * dailyFine;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       await tx.book.update({
         where: { id: borrowing.bookId },
         data: { copiesAvailable: { increment: 1 } }
@@ -165,8 +181,21 @@ export class LibraryService {
           status: 'RETURNED',
           returnDate,
           fineAmount
-        }
+        },
+        include: { book: true, student: { include: { user: true } } }
       });
     });
+
+    if (updated.student?.user?.id) {
+      await this.notificationsService.create({
+        userId: Number(updated.student.user.id),
+        title: "Pengembalian Buku Berhasil",
+        message: `Buku "${updated.book.title}" telah dikembalikan.${fineAmount > 0 ? ` Anda dikenakan denda sebesar Rp ${fineAmount}.` : ''}`,
+        type: 'SUCCESS',
+        link: '/library'
+      });
+    }
+
+    return updated;
   }
 }

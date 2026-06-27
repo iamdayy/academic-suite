@@ -37,6 +37,7 @@ import { ReportsModule } from './reports/reports.module';
 import { AlumniModule } from './alumni/alumni.module';
 import { LibraryModule } from './library/library.module';
 import { FacilitiesModule } from './facilities/facilities.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { FacilitiesModule } from './facilities/facilities.module';
     AlumniModule,
     LibraryModule,
     FacilitiesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

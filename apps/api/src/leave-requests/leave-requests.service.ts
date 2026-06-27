@@ -3,10 +3,14 @@ import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 import { UpdateLeaveRequestDto } from './dto/update-leave-request.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from 'shared-types';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LeaveRequestsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService
+  ) { }
 
   async create(createLeaveRequestDto: CreateLeaveRequestDto, user: AuthenticatedUser) {
     if (!user.student?.id) {
@@ -66,7 +70,10 @@ export class LeaveRequestsService {
   }
 
   async update(id: number, updateLeaveRequestDto: UpdateLeaveRequestDto) {
-    const request = await this.prisma.leaveRequest.findUnique({ where: { id } });
+    const request = await this.prisma.leaveRequest.findUnique({
+      where: { id },
+      include: { student: { include: { user: true } }, academicYear: true }
+    });
     if (!request) throw new NotFoundException('Leave request not found');
 
     const updated = await this.prisma.leaveRequest.update({

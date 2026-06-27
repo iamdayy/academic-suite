@@ -39,10 +39,11 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relasi 1-to-1: User ini BISA jadi Student, Lecturer, atau Guardian
-  student  Student?
-  lecturer Lecturer?
-  guardian        Guardian?
+  student          Student?
+  lecturer         Lecturer?
+  guardian         Guardian?
   facilityBookings FacilityBooking[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -782,18 +783,33 @@ model Facility {
 }
 
 model FacilityBooking {
-  id          BigInt   @id @default(autoincrement())
-  facilityId  BigInt   @map("facility_id")
-  facility    Facility @relation(fields: [facilityId], references: [id])
-  userId      BigInt   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
-  purpose     String
-  startTime   DateTime @map("start_time")
-  endTime     DateTime @map("end_time")
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         BigInt   @id @default(autoincrement())
+  facilityId BigInt   @map("facility_id")
+  userId     BigInt   @map("user_id") // Siapa yang meminjam (Dosen / Mhs)
+  purpose    String // Tujuan peminjaman
+  startTime  DateTime @map("start_time")
+  endTime    DateTime @map("end_time")
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes      String? // Catatan admin jika ditolak/disetujui
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   @@map("facility_bookings")
+}
+
+model Notification {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR
+  isRead    Boolean  @default(false) @map("is_read")
+  link      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

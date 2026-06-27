@@ -2,10 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFacilityDto } from './dto/create-facility.dto';
 import { CreateFacilityBookingDto } from './dto/create-facility-booking.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class FacilitiesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService
+  ) {}
 
   // --- Facilities Management ---
   createFacility(createDto: CreateFacilityDto) {
@@ -138,9 +142,21 @@ export class FacilitiesService {
       }
     }
 
-    return this.prisma.facilityBooking.update({
+    const updatedBooking = await this.prisma.facilityBooking.update({
       where: { id },
-      data: { status, notes }
+      data: { status, notes },
+      include: { facility: true }
     });
+
+    // Send notification to the user
+    await this.notificationsService.create({
+      userId: Number(updatedBooking.userId),
+      title: `Peminjaman Fasilitas ${status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}`,
+      message: `Permohonan Anda untuk menggunakan fasilitas ${updatedBooking.facility.name} telah ${status === 'APPROVED' ? 'disetujui' : 'ditolak'}. ${notes ? `Catatan: ${notes}` : ''}`,
+      type: status === 'APPROVED' ? 'SUCCESS' : 'ERROR',
+      link: '/facilities'
+    });
+
+    return updatedBooking;
   }
 }

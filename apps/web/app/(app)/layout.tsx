@@ -58,6 +58,8 @@ interface IRoute {
   href: string;
   icon: any;
 }
+import { NotificationDropdown } from "@/components/NotificationDropdown";
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAuthStore();
   const [routes, setRoutes] = useState<IRoute[]>([]);
@@ -279,6 +281,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* --- HEADER --- */}
           <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="container flex h-14 items-center justify-end">
+              <NotificationDropdown />
               {/* User Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
