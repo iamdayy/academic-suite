@@ -19,6 +19,8 @@ RUN pnpm install
 
 COPY --from=builder /app/out/full/ .
 # Build the nextjs application
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm turbo run build --filter=web...
 
 FROM base AS runner
