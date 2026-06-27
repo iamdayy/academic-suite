@@ -6,7 +6,7 @@ RUN apk add --no-cache libc6-compat openssl
 
 FROM base AS builder
 WORKDIR /app
-RUN pnpm add -g turbo@^2
+RUN npm install -g turbo@^2
 COPY . .
 RUN turbo prune api --docker
 
