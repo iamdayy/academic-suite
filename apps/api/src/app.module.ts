@@ -28,6 +28,9 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { GradingModule } from './grading/grading.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ThesesModule } from './theses/theses.module';
+import { CounselingLogsModule } from './counseling-logs/counseling-logs.module';
+import { ThesisDefensesModule } from './thesis-defenses/thesis-defenses.module';
 
 @Module({
   imports: [
@@ -58,6 +61,9 @@ import { PaymentsModule } from './payments/payments.module';
     GradingModule,
     InvoicesModule,
     PaymentsModule,
+    ThesesModule,
+    CounselingLogsModule,
+    ThesisDefensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

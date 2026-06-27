@@ -27,6 +27,7 @@ import {
   UserCheck,
   Users,
   CreditCard,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -115,6 +116,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/admin/finance",
       icon: CreditCard,
     },
+    {
+      name: "Tugas Akhir & Sidang",
+      href: "/admin/thesis",
+      icon: FileText,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
@@ -126,6 +132,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Kelas Saya",
       href: "/lecturer/classes",
       icon: BookCopy,
+    },
+    {
+      name: "Bimbingan Mahasiswa",
+      href: "/lecturer/thesis",
+      icon: FileText,
     },
   ];
   const studentRoutes: IRoute[] = [
@@ -153,6 +164,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Tagihan & Pembayaran",
       href: "/finance",
       icon: CreditCard,
+    },
+    {
+      name: "Tugas Akhir (Skripsi)",
+      href: "/thesis",
+      icon: FileText,
     },
   ];
 

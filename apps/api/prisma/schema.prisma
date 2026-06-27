@@ -65,6 +65,7 @@ model Student {
   attendanceRecords AttendanceRecord[]
   studentScores     StudentScore[]
   invoices          Invoice[]
+  thesis            Thesis?
 
   @@map("students")
 }
@@ -80,6 +81,9 @@ model Lecturer {
 
   // Relasi: Dosen ini mengajar...
   classes Class[]
+  thesisSupervisors ThesisSupervisor[]
+  counselingLogs    CounselingLog[]
+  thesisExaminers   ThesisExaminer[]
 
   @@map("lecturers")
 }
@@ -466,3 +470,97 @@ model Payment {
   @@map("payments")
 }
 
+// ===========================================
+// BLOK 5: TUGAS AKHIR & BIMBINGAN
+// ===========================================
+
+model Thesis {
+  id          BigInt       @id @default(autoincrement())
+  studentId   BigInt       @unique @map("student_id") // 1 Student = 1 Active Thesis
+  student     Student      @relation(fields: [studentId], references: [id])
+  
+  title       String       @db.Text
+  abstract    String?      @db.Text
+  status      String       // "PROPOSED", "ACTIVE", "COMPLETED", "REJECTED"
+  
+  startDate   DateTime?    @map("start_date")
+  endDate     DateTime?    @map("end_date")
+  
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  supervisors    ThesisSupervisor[]
+  counselingLogs CounselingLog[]
+  defense        ThesisDefense?
+
+  @@map("theses")
+}
+
+model ThesisSupervisor {
+  id          BigInt       @id @default(autoincrement())
+  thesisId    BigInt       @map("thesis_id")
+  thesis      Thesis       @relation(fields: [thesisId], references: [id], onDelete: Cascade)
+  lecturerId  BigInt       @map("lecturer_id")
+  lecturer    Lecturer     @relation(fields: [lecturerId], references: [id])
+  
+  role        String       // "PEMBIMBING_1", "PEMBIMBING_2"
+  status      String       @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@unique([thesisId, lecturerId])
+  @@map("thesis_supervisors")
+}
+
+model CounselingLog {
+  id          BigInt       @id @default(autoincrement())
+  thesisId    BigInt       @map("thesis_id")
+  thesis      Thesis       @relation(fields: [thesisId], references: [id], onDelete: Cascade)
+  lecturerId  BigInt       @map("lecturer_id")
+  lecturer    Lecturer     @relation(fields: [lecturerId], references: [id])
+  
+  date        DateTime     @db.Date
+  notes       String       @db.Text
+  status      String       // "PENDING", "APPROVED", "REJECTED"
+  
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("counseling_logs")
+}
+
+model ThesisDefense {
+  id          BigInt       @id @default(autoincrement())
+  thesisId    BigInt       @unique @map("thesis_id")
+  thesis      Thesis       @relation(fields: [thesisId], references: [id], onDelete: Cascade)
+  
+  scheduledAt DateTime     @map("scheduled_at")
+  room        String
+  status      String       // "SCHEDULED", "PASSED", "FAILED"
+  score       Float?
+  notes       String?      @db.Text
+  
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  examiners   ThesisExaminer[]
+
+  @@map("thesis_defenses")
+}
+
+model ThesisExaminer {
+  id              BigInt       @id @default(autoincrement())
+  thesisDefenseId BigInt       @map("thesis_defense_id")
+  thesisDefense   ThesisDefense @relation(fields: [thesisDefenseId], references: [id], onDelete: Cascade)
+  lecturerId      BigInt       @map("lecturer_id")
+  lecturer        Lecturer     @relation(fields: [lecturerId], references: [id])
+  
+  role            String       // "PENGUJI_1", "PENGUJI_2"
+  
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  @@unique([thesisDefenseId, lecturerId])
+  @@map("thesis_examiners")
+}
