@@ -6,4 +6,4 @@ import { CounselingLogsController } from './counseling-logs.controller';
   controllers: [CounselingLogsController],
   providers: [CounselingLogsService],
 })
-export class CounselingLogsModule {}
+export class CounselingLogsModule { }
