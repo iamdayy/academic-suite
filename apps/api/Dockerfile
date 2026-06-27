@@ -20,8 +20,7 @@ RUN pnpm install
 COPY --from=builder /app/out/full/ .
 # This will run prisma generate and nest build for the api app
 # We provide a dummy database URL because prisma generate strictly requires it to be set, even though it doesn't connect.
-ARG DATABASE_POSTGRES_PRISMA_URL
-ENV DATABASE_POSTGRES_PRISMA_URL=$DATABASE_POSTGRES_PRISMA_URL
+ENV DATABASE_POSTGRES_PRISMA_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN pnpm turbo run build --filter=api...
 
 FROM base AS runner
