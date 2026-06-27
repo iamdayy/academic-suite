@@ -20,8 +20,8 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
-      DATABASE_POSTGRES_PRISMA_URL: postgresql://postgres:password@db:5432/academic_suite?schema=public
-      DIRECT_POSTGRES_URL: postgresql://postgres:password@db:5432/academic_suite?schema=public
+      DATABASE_POSTGRES_PRISMA_URL: ${DATABASE_POSTGRES_PRISMA_URL:-postgresql://postgres:password@db:5432/academic_suite?schema=public}
+      DIRECT_POSTGRES_URL: ${DIRECT_POSTGRES_URL:-postgresql://postgres:password@db:5432/academic_suite?schema=public}
       JWT_SECRET: ${JWT_SECRET:-supersecretjwt}
       FRONTEND_URL: ${SERVICE_URL_WEB:-http://localhost:3000}
     ports:
@@ -34,6 +34,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${SERVICE_URL_API:-http://localhost:3001}
     environment:
       NEXT_PUBLIC_API_URL: ${SERVICE_URL_API:-http://localhost:3001}
     ports:
