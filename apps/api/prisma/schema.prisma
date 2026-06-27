@@ -54,6 +54,7 @@ model Student {
   studyProgram   StudyProgram @relation(fields: [studyProgramId], references: [id])
   nim            String       @unique
   name           String
+  status         String       @default("ACTIVE") // "ACTIVE", "ON_LEAVE", "GRADUATED", "DROPOUT"
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
@@ -66,6 +67,8 @@ model Student {
   studentScores     StudentScore[]
   invoices          Invoice[]
   thesis            Thesis?
+  leaveRequests     LeaveRequest[]
+  edomSubmissions   EdomSubmission[]
 
   @@map("students")
 }
@@ -242,9 +245,10 @@ model AcademicYear {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relasi: Tahun Ajaran ini punya...
-  krsHeaders KrsHeader[]
-  classes    Class[]
-  invoices   Invoice[]
+  krsHeaders    KrsHeader[]
+  classes       Class[]
+  invoices      Invoice[]
+  leaveRequests LeaveRequest[]
 
   @@map("academic_years")
 }
@@ -306,6 +310,7 @@ model Class {
   classSchedules  ClassSchedule[]
   studentScores   StudentScore[]
   gradingPolicies GradingPolicy[]
+  edomSubmissions EdomSubmission[]
 
   @@map("classes")
 }
@@ -563,4 +568,71 @@ model ThesisExaminer {
 
   @@unique([thesisDefenseId, lecturerId])
   @@map("thesis_examiners")
+}
+
+// ===========================================
+// BLOK 6: CUTI AKADEMIK
+// ===========================================
+
+model LeaveRequest {
+  id              BigInt       @id @default(autoincrement())
+  studentId       BigInt       @map("student_id")
+  student         Student      @relation(fields: [studentId], references: [id])
+  
+  academicYearId  BigInt       @map("academic_year_id")
+  academicYear    AcademicYear @relation(fields: [academicYearId], references: [id])
+  
+  reason          String       @db.Text
+  status          String       @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  documentUrl     String?      @map("document_url")
+  adminNotes      String?      @map("admin_notes") @db.Text
+  
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  @@map("leave_requests")
+}
+
+// ===========================================
+// BLOK 7: EDOM (Evaluasi Dosen Oleh Mahasiswa)
+// ===========================================
+
+model EdomQuestion {
+  id        BigInt   @id @default(autoincrement())
+  question  String   @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  answers   EdomAnswer[]
+
+  @@map("edom_questions")
+}
+
+model EdomSubmission {
+  id        BigInt   @id @default(autoincrement())
+  studentId BigInt   @map("student_id")
+  student   Student  @relation(fields: [studentId], references: [id])
+  classId   BigInt   @map("class_id")
+  class     Class    @relation(fields: [classId], references: [id])
+  
+  feedback  String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  answers   EdomAnswer[]
+
+  @@unique([studentId, classId]) // One submission per student per class
+  @@map("edom_submissions")
+}
+
+model EdomAnswer {
+  id             BigInt         @id @default(autoincrement())
+  submissionId   BigInt         @map("submission_id")
+  submission     EdomSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId     BigInt         @map("question_id")
+  question       EdomQuestion   @relation(fields: [questionId], references: [id])
+  score          Int            // Usually 1-5
+
+  @@unique([submissionId, questionId])
+  @@map("edom_answers")
 }

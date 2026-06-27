@@ -28,6 +28,8 @@ import {
   Users,
   CreditCard,
   FileText,
+  PauseCircle,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -121,6 +123,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/admin/thesis",
       icon: FileText,
     },
+    {
+      name: "Cuti Akademik",
+      href: "/admin/leave",
+      icon: PauseCircle,
+    },
+    {
+      name: "Evaluasi Dosen (EDOM)",
+      href: "/admin/edom",
+      icon: ClipboardList,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
@@ -168,6 +180,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     {
       name: "Tugas Akhir (Skripsi)",
       href: "/thesis",
+      icon: FileText,
+    },
+    {
+      name: "Cuti Akademik",
+      href: "/leave",
+      icon: PauseCircle,
+    },
+    {
+      name: "Evaluasi Dosen (EDOM)",
+      href: "/edom",
+      icon: ClipboardList,
+    },
+    {
+      name: "Kartu Hasil Studi (KHS)",
+      href: "/khs",
+      icon: FileText,
+    },
+    {
+      name: "Transkrip Nilai",
+      href: "/transcript",
       icon: FileText,
     },
   ];

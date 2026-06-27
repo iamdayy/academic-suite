@@ -31,6 +31,9 @@ import { PaymentsModule } from './payments/payments.module';
 import { ThesesModule } from './theses/theses.module';
 import { CounselingLogsModule } from './counseling-logs/counseling-logs.module';
 import { ThesisDefensesModule } from './thesis-defenses/thesis-defenses.module';
+import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
+import { EdomModule } from './edom/edom.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -64,6 +67,9 @@ import { ThesisDefensesModule } from './thesis-defenses/thesis-defenses.module';
     ThesesModule,
     CounselingLogsModule,
     ThesisDefensesModule,
+    LeaveRequestsModule,
+    EdomModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
