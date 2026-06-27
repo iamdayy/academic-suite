@@ -26,6 +26,8 @@ import { StatsModule } from './stats/stats.module';
 import { ClassSchedulesModule } from './class-schedules/class-schedules.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { GradingModule } from './grading/grading.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { GradingModule } from './grading/grading.module';
     ClassSchedulesModule,
     AttendanceModule,
     GradingModule,
+    InvoicesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

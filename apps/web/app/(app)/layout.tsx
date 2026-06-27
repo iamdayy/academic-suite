@@ -26,6 +26,7 @@ import {
   User,
   UserCheck,
   Users,
+  CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -109,6 +110,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: "/admin/krs-approval",
       icon: CheckCheck,
     },
+    {
+      name: "Keuangan & Tagihan",
+      href: "/admin/finance",
+      icon: CreditCard,
+    },
   ];
   const lecturerRoutes: IRoute[] = [
     {
@@ -142,6 +148,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       name: "Presensi Saya",
       href: "/attendance",
       icon: CalendarDays,
+    },
+    {
+      name: "Tagihan & Pembayaran",
+      href: "/finance",
+      icon: CreditCard,
     },
   ];
 
