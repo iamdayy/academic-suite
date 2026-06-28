@@ -17,12 +17,25 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { ClassSchedulesService } from './class-schedules.service';
 import { CreateClassScheduleDto } from './dto/create-class-schedule.dto';
+import { GenerateClassScheduleDto } from './dto/generate-class-schedule.dto';
 import { UpdateClassScheduleDto } from './dto/update-class-schedule.dto';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard) // Amankan seluruh controller
 @Controller('class-schedules')
 export class ClassSchedulesController {
   constructor(private readonly classSchedulesService: ClassSchedulesService) {}
+
+  /**
+   * [UNTUK ADMIN]
+   * POST /class-schedules/generate
+   */
+  @Post('generate')
+  @Roles(Role.ADMIN)
+  generateAutoSchedule(@Body() generateDto: GenerateClassScheduleDto) {
+    return this.classSchedulesService.generateAutoSchedule(
+      generateDto.academicYearId,
+    );
+  }
 
   /**
    * [UNTUK ADMIN]
